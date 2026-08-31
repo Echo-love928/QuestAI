@@ -1,0 +1,106 @@
+.result-screen::after {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  left: 0;
+  height: 250px;
+  opacity: 0.14;
+  background: repeating-conic-gradient(from 2deg at 50% 48%, #20232b 0 1.2deg, transparent 1.2deg 7deg);
+  content: "";
+}
+
+.result-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.victory-scene {
+  position: relative;
+  width: 270px;
+  height: 232px;
+  margin: 0 auto;
+}
+
+.victory-aura {
+  position: absolute;
+  inset: 18px 46px 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 217, 61, 0.72) 0 53%, rgba(255, 217, 61, 0.25) 54% 68%, transparent 69%);
+}
+
+.victory-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 204px;
+  animation: victory-float 1.9s ease-in-out infinite;
+}
+
+.victory-score {
+  position: absolute;
+  z-index: 3;
+  right: 44px;
+  bottom: 2px;
+  left: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 3px solid var(--ink);
+  border-radius: 17px 12px 18px 13px;
+  background: var(--orange);
+  box-shadow: 5px 5px 0 #000;
+  transform: rotate(-1deg);
+}
+
+.victory-title {
+  color: var(--white);
+  font-size: 24px;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 var(--orange-deep);
+}
+
+.victory-count {
+  padding: 5px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background: var(--yellow);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.reward-row {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  margin: 12px 0 18px;
+}
+
+.reward-chip {
+  padding: 7px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--white);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.result-title {
+  margin: 10px 0 6px;
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.result-actions {
+  margin-top: 22px;
+}
+
+@keyframes victory-float {
+  0%, 100% { transform: translateY(1px) rotate(-1deg); }
+  50% { transform: translateY(-7px) rotate(1deg); }
+}
+
