@@ -1,7 +1,26 @@
+@use "../../styles/user-system";
+
 .home-body {
   display: flex;
   flex-direction: column;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
 }
+
+.home-user-strip {
+  display: grid;
+  grid-template-columns: 27px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 7px;
+  padding: 6px 9px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 254, 248, 0.72);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.home-user-strip image { width: 27px; height: 27px; border-radius: 50%; background: var(--paper-deep); }
 
 .home-one-liner {
   margin-bottom: 17px;
@@ -81,6 +100,14 @@
 .inspiration-block {
   margin-top: 21px;
 }
+
+.home-history { margin-top: 17px; }
+.home-history-card { display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%; min-height: 53px; margin-bottom: 8px; padding: 8px 11px; border: 2px solid var(--ink); border-radius: 13px; background: var(--white); box-shadow: 3px 3px 0 #000; text-align: left; line-height: 1.25; }
+.home-history-card view { display: flex; min-width: 0; flex-direction: column; }
+.home-history-card view text:first-child { overflow: hidden; font-size: 11px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.home-history-card view text:last-child { margin-top: 3px; color: var(--muted); font-size: 8px; }
+.home-history-card > text { color: var(--green); font-size: 13px; font-weight: 900; }
+
 
 .inspiration-heading {
   display: flex;
@@ -338,4 +365,3 @@
 .error-body .coach-note {
   margin-top: auto;
 }
-

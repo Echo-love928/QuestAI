@@ -56,3 +56,44 @@ export interface ApiResponse<T> {
   data: T | null
 }
 
+export interface UserSummary {
+  id: number
+  nickname: string
+  avatar_url: string | null
+  total_xp: number
+}
+
+export interface LoginResult {
+  token: string
+  user: UserSummary
+}
+
+export interface UserProfile extends UserSummary {
+  quiz_count: number
+  correct_count: number
+  average_accuracy: number
+}
+
+export interface QuizHistoryItem {
+  quiz_id: string
+  title: string
+  accuracy: number | null
+  question_count: number
+  correct_count: number | null
+  xp_earned: number
+  status: 'generated' | 'completed'
+  created_at: string
+}
+
+export interface QuizHistoryPage {
+  items: QuizHistoryItem[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface QuizHistoryDetail {
+  quiz: Record<string, unknown>
+  answer_records: Array<Record<string, unknown>>
+  report: Record<string, unknown> | null
+}

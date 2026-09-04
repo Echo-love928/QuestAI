@@ -11,6 +11,8 @@ __pycache__/
 htmlcov/
 .venv/
 *.egg-info/
+backend/uploads/avatars/*
+!backend/uploads/avatars/.gitkeep
 
 # Node / Taro
 node_modules/

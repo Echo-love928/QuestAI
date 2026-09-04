@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "AI闯关学习",
   "description": "把任意学习内容变成 AI 闯关题",
-  "appid": "touristappid",
+  "appid": "wxa7472331ac4a8813",
   "setting": {
     "urlCheck": false,
     "es6": true,

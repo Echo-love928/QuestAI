@@ -1,5 +1,5 @@
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
 import bookbuddy from '@/assets/bookbuddy.svg'
@@ -7,9 +7,13 @@ import bulbbuddy from '@/assets/bulbbuddy.svg'
 import fishai from '@/assets/fishai.svg'
 import pencilbuddy from '@/assets/pencilbuddy.svg'
 import BrandBar from '@/components/BrandBar'
+import BottomNav from '@/components/BottomNav'
 import CoachNote from '@/components/CoachNote'
 import StatusBar from '@/components/StatusBar'
-import { generateQuiz } from '@/services/api'
+import { ensureLogin } from '@/services/auth'
+import { generateQuiz, getQuizHistory, getUserProfile } from '@/services/api'
+import type { QuizHistoryItem, UserSummary } from '@/types/api'
+import { authStorage } from '@/utils/auth-storage'
 import { learningStorage } from '@/utils/storage'
 
 import './index.scss'
@@ -35,6 +39,17 @@ export default function IndexPage() {
   const [input, setInput] = useState('')
   const [pageState, setPageState] = useState<PageState>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [user, setUser] = useState<UserSummary | null>(() => authStorage.getUser())
+  const [recentRecords, setRecentRecords] = useState<QuizHistoryItem[]>([])
+
+  useDidShow(() => {
+    void ensureLogin().then(async () => {
+      const [profile, history] = await Promise.all([getUserProfile(), getQuizHistory(1, 2)])
+      setUser(profile)
+      setRecentRecords(history.items.filter((item) => item.status === 'completed'))
+      authStorage.saveUser(profile)
+    }).catch(() => undefined)
+  })
 
   const startGenerate = async () => {
     if (input.trim().length < 4 || pageState === 'loading') return
@@ -106,7 +121,8 @@ export default function IndexPage() {
     <View className='screen'>
       <StatusBar />
       <View className='screen-body home-body'>
-        <BrandBar trailing={<View className='xp-pill'><Text className='star'>★</Text><Text>0 XP</Text></View>} />
+        <BrandBar trailing={<View className='xp-pill' onClick={() => Taro.navigateTo({ url: '/pages/profile/index' })}><Text className='star'>★</Text><Text>{user?.total_xp ?? 0} XP</Text></View>} />
+        <View className='home-user-strip' onClick={() => Taro.navigateTo({ url: '/pages/profile/index' })}><Image src={user?.avatar_url || fishai} mode='aspectFill' /><Text>{user ? `${user.nickname}，和鱼仔继续闯关` : '鱼仔正在识别你的学习档案'}</Text><Text>›</Text></View>
         <View className='hero-copy home-one-liner'>
           <Text>{input.trim() ? '内容已就位，' : '输入想学的内容，'}</Text><View className='line-break' />
           <Text className='scribble'>{input.trim() ? '马上生成这组闯关题。' : '马上生成闯关题。'}</Text>
@@ -141,6 +157,7 @@ export default function IndexPage() {
                 </Button>
               ))}
             </View>
+            {recentRecords.length > 0 && <View className='home-history'><View className='inspiration-heading'><Text>最近完成</Text><Text className='muted' onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>查看全部 →</Text></View>{recentRecords.map((record) => <Button className='home-history-card' key={record.quiz_id} onClick={() => Taro.navigateTo({ url: `/pages/history-detail/index?quizId=${encodeURIComponent(record.quiz_id)}` })}><View><Text>{record.title}</Text><Text>{record.correct_count}/{record.question_count} · +{record.xp_earned} XP</Text></View><Text>{record.accuracy}%</Text></Button>)}</View>}
           </View>
         ) : (
           <View className='ready-process'>
@@ -149,6 +166,7 @@ export default function IndexPage() {
             <View className='process-buddy'><Image src={fishai} /><Text>陪你闯关</Text></View>
           </View>
         )}
+        <BottomNav active='challenge' />
       </View>
     </View>
   )
