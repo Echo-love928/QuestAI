@@ -10,9 +10,8 @@ import BrandBar from '@/components/BrandBar'
 import BottomNav from '@/components/BottomNav'
 import CoachNote from '@/components/CoachNote'
 import { ensureLogin } from '@/services/auth'
-import { ApiError, generateQuiz, getQuizHistory, getUserProfile } from '@/services/api'
-import type { CancellableRequest } from '@/services/api'
-import type { InputSourceType, Quiz, QuizHistoryItem, UserSummary } from '@/types/api'
+import { ApiError, createQuizTask, getQuizHistory, getQuizTask, getUserProfile } from '@/services/api'
+import type { InputSourceType, QuizHistoryItem, QuizTaskStatus, UserSummary } from '@/types/api'
 import { authStorage } from '@/utils/auth-storage'
 import { learningStorage } from '@/utils/storage'
 
@@ -45,6 +44,8 @@ const RESEARCH_ERROR_CODES = {
   RESEARCH_URL_EXTRACT_UNAVAILABLE: 5102
 } as const
 
+const POLL_INTERVAL_MS = 8000
+
 const loadingCopy: Record<LoadingStage, { badge: string; title: string; copy: string }> = {
   search: { badge: '正在联网', title: '鱼仔正在翻最新资料', copy: '先认准领域，再比较新鲜、可靠的来源。' },
   extract: { badge: '读取网页', title: '鱼仔把网页装进资料袋', copy: '正在提取正文，广告和页面按钮不会拿来出题。' },
@@ -70,9 +71,9 @@ export default function IndexPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [user, setUser] = useState<UserSummary | null>(() => authStorage.getUser())
   const [recentRecords, setRecentRecords] = useState<QuizHistoryItem[]>([])
-  const requestRef = useRef<CancellableRequest<Quiz> | null>(null)
   const generationId = useRef(0)
   const stageTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearStageTimers = () => {
     stageTimers.current.forEach(clearTimeout)
@@ -82,15 +83,15 @@ export default function IndexPage() {
   const cancelGeneration = () => {
     generationId.current += 1
     clearStageTimers()
-    requestRef.current?.abort()
-    requestRef.current = null
+    if (pollTimer.current) clearTimeout(pollTimer.current)
+    pollTimer.current = null
     setPageState('idle')
   }
 
   useUnload(cancelGeneration)
   useEffect(() => () => {
     clearStageTimers()
-    requestRef.current?.abort()
+    if (pollTimer.current) clearTimeout(pollTimer.current)
   }, [])
 
   useDidShow(() => {
@@ -119,15 +120,7 @@ export default function IndexPage() {
       setTimeout(() => activeId === generationId.current && setLoadingStage('verify'), 2200),
       setTimeout(() => activeId === generationId.current && setLoadingStage('generate'), 4800)
     ]
-    try {
-      const operation = generateQuiz(value, 5, sourceType)
-      requestRef.current = operation
-      const quiz = await operation.promise
-      if (activeId !== generationId.current) return
-      learningStorage.saveQuiz(quiz)
-      await Taro.navigateTo({ url: '/pages/preview/index' })
-      setPageState('idle')
-    } catch (error) {
+    const handleFailure = (error: unknown) => {
       if (activeId !== generationId.current) return
       if (error instanceof ApiError) {
         if ([RESEARCH_ERROR_CODES.RESEARCH_URL_UNSAFE, RESEARCH_ERROR_CODES.RESEARCH_URL_EXTRACT_UNAVAILABLE].includes(error.code as 4101 | 5102)) setErrorKind('url')
@@ -136,11 +129,36 @@ export default function IndexPage() {
       }
       setErrorMessage(error instanceof Error ? error.message : '网络连接失败，请检查后重试')
       setPageState('error')
-    } finally {
-      if (activeId === generationId.current) {
+      clearStageTimers()
+      pollTimer.current = null
+    }
+    const processTask = async (task: QuizTaskStatus) => {
+      if (activeId !== generationId.current) return
+      if (task.status === 'completed' && task.quiz) {
         clearStageTimers()
-        requestRef.current = null
+        pollTimer.current = null
+        learningStorage.saveQuiz(task.quiz)
+        await Taro.navigateTo({ url: '/pages/preview/index' })
+        setPageState('idle')
+        return
       }
+      if (task.status === 'failed') {
+        handleFailure(new ApiError(
+          task.error_code ?? 5000,
+          task.error_message || '题目生成任务失败，请稍后重试',
+          200
+        ))
+        return
+      }
+      pollTimer.current = setTimeout(() => {
+        void getQuizTask(task.task_id).then(processTask).catch(handleFailure)
+      }, POLL_INTERVAL_MS)
+    }
+    try {
+      const task = await createQuizTask(value, 5, sourceType)
+      await processTask(task)
+    } catch (error) {
+      handleFailure(error)
     }
   }
 

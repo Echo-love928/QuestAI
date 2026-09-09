@@ -11,7 +11,9 @@ AI闯关学习把用户输入的一段知识转成互动题目，支持逐题反
 - 基于真实作答记录生成复盘报告
 - 微信静默登录、个人资料与头像
 - MySQL 闯关历史、答案与报告持久化
-- URL、文件、PDF 和视频入口保留 UI，暂不接入解析
+- 文本关键词联网检索与公开 URL 网页提取
+- 数据库持久化的异步出题任务，前端每 8 秒轮询状态
+- 文件、PDF 和视频入口保留 UI，暂不接入解析
 
 ## 项目结构
 
@@ -119,10 +121,16 @@ npm run build:weapp
 GET /api/v1/health
 ```
 
-### 生成题目
+### 异步生成题目（小程序默认）
 
 ```text
-POST /api/v1/quiz/generate
+POST /api/v1/quiz/tasks
+```
+
+创建成功返回 HTTP 202 与 `pending` 状态。前端随后每 8 秒查询：
+
+```text
+GET /api/v1/quiz/tasks/{task_id}
 ```
 
 ```json
@@ -132,6 +140,10 @@ POST /api/v1/quiz/generate
   "difficulty": "mixed"
 }
 ```
+
+状态依次为 `pending`、`processing`，最终进入 `completed` 或 `failed`。
+完成响应包含完整题库；失败响应只包含安全的业务错误码与可展示信息。
+原同步接口 `POST /api/v1/quiz/generate` 暂时保留，用于兼容已有调用方。
 
 ### 生成报告
 

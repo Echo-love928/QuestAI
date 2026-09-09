@@ -13,3 +13,5 @@ CREATE TABLE IF NOT EXISTS `AI-learn-test`.`answer_records`
   LIKE `AI-learn`.`answer_records`;
 CREATE TABLE IF NOT EXISTS `AI-learn-test`.`reports`
   LIKE `AI-learn`.`reports`;
+CREATE TABLE IF NOT EXISTS `AI-learn-test`.`quiz_generation_tasks`
+  LIKE `AI-learn`.`quiz_generation_tasks`;

@@ -42,6 +42,16 @@ export interface Quiz {
   researched_at?: string | null
 }
 
+export type QuizTaskState = 'pending' | 'processing' | 'completed' | 'failed'
+
+export interface QuizTaskStatus {
+  task_id: string
+  status: QuizTaskState
+  quiz?: Quiz | null
+  error_code?: number | null
+  error_message?: string | null
+}
+
 export interface AnswerRecord {
   question_id: string
   selected_answers: string[]

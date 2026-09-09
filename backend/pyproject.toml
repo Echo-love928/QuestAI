@@ -9,6 +9,7 @@ description = "AI 闯关学习 MVP 后端"
 requires-python = ">=3.11"
 dependencies = [
   "aiomysql>=0.2,<1",
+  "cryptography>=45,<47",
   "fastapi>=0.116,<1",
   "httpx>=0.28,<1",
   "langchain==1.4.0",

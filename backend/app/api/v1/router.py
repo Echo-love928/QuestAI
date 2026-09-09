@@ -2,14 +2,16 @@ import logging
 from uuid import uuid4
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, UploadFile
 
 from app.api.dependencies import optional_user, required_user
 from app.core.rate_limit import RateLimitExceeded
 from app.models.common import ApiResponse, HealthData
 from app.models.quiz import Quiz, QuizGenerateRequest
+from app.models.quiz_task import QuizTaskStatus
 from app.models.report import LearningReport, ReportGenerateRequest
 from app.services.quiz_service import QuizService
+from app.services.quiz_task_service import QuizTaskService
 from app.services.report_service import ReportService
 from app.models.user import (
     LoginRequest,
@@ -52,6 +54,58 @@ async def generate_quiz(
         except Exception:
             logger.exception("保存闯关题目失败", extra={"quiz_id": quiz.quiz_id})
     return ApiResponse(data=quiz)
+
+
+@router.post(
+    "/quiz/tasks",
+    response_model=ApiResponse[QuizTaskStatus],
+    status_code=202,
+)
+async def create_quiz_task(
+    payload: QuizGenerateRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    user: Annotated[User | None, Depends(optional_user)],
+) -> ApiResponse[QuizTaskStatus]:
+    client_key = f"user:{user.id}" if user is not None else (
+        request.client.host if request.client else "anonymous"
+    )
+    request.app.state.quiz_rate_limiter.check(client_key)
+    repository = request.app.state.learning_repository
+    if repository is None:
+        raise HTTPException(status_code=503, detail="任务服务暂时不可用")
+    service = QuizTaskService(
+        request.app.state.gateway,
+        repository,
+        researcher=request.app.state.researcher,
+    )
+    task = await service.create(payload, user.id if user is not None else None)
+    background_tasks.add_task(
+        service.run, task.task_id, payload, user.id if user is not None else None
+    )
+    return ApiResponse(data=task)
+
+
+@router.get(
+    "/quiz/tasks/{task_id}",
+    response_model=ApiResponse[QuizTaskStatus],
+)
+async def get_quiz_task(
+    task_id: str,
+    request: Request,
+    user: Annotated[User | None, Depends(optional_user)],
+) -> ApiResponse[QuizTaskStatus]:
+    repository = request.app.state.learning_repository
+    if repository is None:
+        raise HTTPException(status_code=503, detail="任务服务暂时不可用")
+    task = await QuizTaskService(
+        request.app.state.gateway,
+        repository,
+        researcher=request.app.state.researcher,
+    ).get(task_id, user.id if user is not None else None)
+    if task is None:
+        raise HTTPException(status_code=404, detail="生成任务不存在")
+    return ApiResponse(data=task)
 
 
 @router.post("/report/generate", response_model=ApiResponse[LearningReport])

@@ -6,6 +6,8 @@ import aiomysql
 
 from app.db.database import Database
 from app.models.quiz import Quiz
+from app.models.quiz import QuizGenerateRequest
+from app.models.quiz_task import QuizTaskStatus
 from app.models.report import LearningReport, ReportGenerateRequest
 from app.models.user import (
     QuizHistoryDetail,
@@ -134,6 +136,94 @@ class MySQLRepository:
                         len(quiz.questions),
                     ),
                 )
+            await connection.commit()
+
+    async def create_quiz_task(
+        self,
+        task_id: str,
+        user_id: int | None,
+        request: QuizGenerateRequest,
+    ) -> QuizTaskStatus:
+        async with self.database.require_pool().acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(
+                    """
+                    INSERT INTO quiz_generation_tasks
+                      (task_id, user_id, status, request_json)
+                    VALUES (%s, %s, 'pending', %s)
+                    """,
+                    (
+                        task_id,
+                        user_id,
+                        json.dumps(request.model_dump(mode="json"), ensure_ascii=False),
+                    ),
+                )
+            await connection.commit()
+        return QuizTaskStatus(task_id=task_id, status="pending")
+
+    async def get_quiz_task(
+        self, task_id: str
+    ) -> tuple[QuizTaskStatus, int | None] | None:
+        row = await self.database.fetch_one(
+            """
+            SELECT task_id, user_id, status, result_json, error_code, error_message
+            FROM quiz_generation_tasks WHERE task_id = %s
+            """,
+            (task_id,),
+        )
+        if row is None:
+            return None
+        quiz = Quiz.model_validate(_json_value(row["result_json"])) if row["result_json"] else None
+        task = QuizTaskStatus(
+            task_id=row["task_id"],
+            status=row["status"],
+            quiz=quiz,
+            error_code=row["error_code"],
+            error_message=row["error_message"],
+        )
+        return task, row["user_id"]
+
+    async def mark_quiz_task_processing(self, task_id: str) -> None:
+        await self._update_quiz_task(
+            """
+            UPDATE quiz_generation_tasks
+            SET status = 'processing', started_at = CURRENT_TIMESTAMP(3)
+            WHERE task_id = %s AND status = 'pending'
+            """,
+            (task_id,),
+        )
+
+    async def complete_quiz_task(self, task_id: str, quiz: Quiz) -> None:
+        await self._update_quiz_task(
+            """
+            UPDATE quiz_generation_tasks
+            SET status = 'completed', result_json = %s,
+                completed_at = CURRENT_TIMESTAMP(3)
+            WHERE task_id = %s
+            """,
+            (
+                json.dumps(quiz.model_dump(mode="json"), ensure_ascii=False),
+                task_id,
+            ),
+        )
+
+    async def fail_quiz_task(
+        self, task_id: str, error_code: int, error_message: str
+    ) -> None:
+        await self._update_quiz_task(
+            """
+            UPDATE quiz_generation_tasks
+            SET status = 'failed', error_code = %s, error_message = %s,
+                completed_at = CURRENT_TIMESTAMP(3)
+            WHERE task_id = %s
+            """,
+            (error_code, error_message, task_id),
+        )
+
+    async def _update_quiz_task(self, sql: str, args: tuple[Any, ...]) -> None:
+        async with self.database.require_pool().acquire() as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(sql, args)
             await connection.commit()
 
     async def save_report(

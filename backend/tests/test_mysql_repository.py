@@ -27,7 +27,7 @@ async def mysql_repository():
     await database.connect()
     async with database.require_pool().acquire() as connection:
         async with connection.cursor() as cursor:
-            for table in ("reports", "answer_records", "quiz_sessions", "users"):
+            for table in ("quiz_generation_tasks", "reports", "answer_records", "quiz_sessions", "users"):
                 await cursor.execute(f"DELETE FROM `{table}`")
         await connection.commit()
     try:
@@ -35,7 +35,7 @@ async def mysql_repository():
     finally:
         async with database.require_pool().acquire() as connection:
             async with connection.cursor() as cursor:
-                for table in ("reports", "answer_records", "quiz_sessions", "users"):
+                for table in ("quiz_generation_tasks", "reports", "answer_records", "quiz_sessions", "users"):
                     await cursor.execute(f"DELETE FROM `{table}`")
             await connection.commit()
         await database.close()

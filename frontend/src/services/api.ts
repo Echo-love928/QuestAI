@@ -7,6 +7,7 @@ import type {
   LearningReport,
   Question,
   Quiz,
+  QuizTaskStatus,
   QuizHistoryDetail,
   QuizHistoryPage,
   UserProfile
@@ -111,6 +112,36 @@ export function generateQuiz(userInput: string, questionCount = 5, sourceType: I
       if (requestTask) requestTask.abort()
     }
   }
+}
+
+export function createQuizTask(
+  userInput: string,
+  questionCount = 5,
+  sourceType: InputSourceType = 'text'
+): Promise<QuizTaskStatus> {
+  return request<QuizTaskStatus>(
+    {
+      url: `${API_BASE}/quiz/tasks`,
+      method: 'POST',
+      data: {
+        user_input: userInput,
+        source_type: sourceType,
+        question_count: questionCount,
+        difficulty: 'mixed'
+      }
+    },
+    { allowAnonymous: true }
+  )
+}
+
+export function getQuizTask(taskId: string): Promise<QuizTaskStatus> {
+  return request<QuizTaskStatus>(
+    {
+      url: `${API_BASE}/quiz/tasks/${encodeURIComponent(taskId)}`,
+      method: 'GET'
+    },
+    { allowAnonymous: true }
+  )
 }
 
 export function generateReport(payload: {
