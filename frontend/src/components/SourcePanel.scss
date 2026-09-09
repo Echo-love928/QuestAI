@@ -1,0 +1,15 @@
+.source-panel { margin: 12px 0 16px; padding: 12px; border: 2px solid var(--ink); border-radius: 15px 12px 18px 13px; background: rgba(255,254,248,.84); box-shadow: 4px 4px 0 var(--ink); }
+.source-panel.is-compact { margin: 8px 0 0; padding: 9px; box-shadow: none; }
+.source-panel-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 9px; font-size: 11px; font-weight: 900; }
+.source-panel-head text:last-child { color: var(--muted); font-size: 8px; }
+.source-items { display: flex; flex-direction: column; gap: 7px; }
+.source-item { display: grid; grid-template-columns: 31px 1fr auto; align-items: center; gap: 8px; padding: 8px; border: 1.5px solid rgba(32,35,43,.25); border-radius: 10px; background: var(--white); }
+.source-logo { display: flex; align-items: center; justify-content: center; width: 29px; height: 29px; border: 2px solid var(--ink); border-radius: 8px; background: var(--yellow); font-size: 11px; font-weight: 900; }
+.source-copy { display: flex; min-width: 0; flex-direction: column; }
+.source-title { overflow: hidden; font-size: 10px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.source-meta { overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.source-actions { display: flex; gap: 4px; }
+.source-actions button { min-width: 36px; height: 25px; padding: 0 5px; border: 1.5px solid var(--ink); border-radius: 999px; background: #eaf8ef; font-size: 8px; font-weight: 900; line-height: 23px; }
+.source-actions button:last-child { background: var(--paper); }
+.source-origin-note { margin: 10px 0; padding: 9px 11px; border: 2px dashed rgba(32,35,43,.35); border-radius: 11px; background: rgba(255,226,92,.25); color: var(--muted); font-size: 10px; font-weight: 900; }
+.source-origin-note.is-legacy { background: rgba(255,254,248,.7); }

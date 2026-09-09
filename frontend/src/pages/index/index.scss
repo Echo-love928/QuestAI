@@ -97,6 +97,8 @@
   margin-bottom: 6px;
 }
 
+.url-hint { margin: -3px 2px 10px; color: var(--muted); font-size: 9px; font-weight: 800; line-height: 1.5; }
+
 .inspiration-block {
   margin-top: 21px;
 }
@@ -288,6 +290,15 @@
   text-align: left;
 }
 
+.research-route { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: 100%; margin: 22px 0 12px; }
+.route-stop { display: flex; min-height: 60px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 2px solid var(--ink); border-radius: 12px; background: rgba(255,254,248,.76); font-size: 9px; font-weight: 900; }
+.route-stop text:first-child { font-size: 18px; }
+.route-stop.is-done { background: #ddf7e9; }
+.route-stop.is-current { background: #ffe0b6; box-shadow: 3px 3px 0 var(--ink); }
+.research-ticket { position: relative; width: 100%; margin: 10px 0; padding: 14px 12px 11px; border: 2px dashed var(--ink); border-radius: 12px; background: rgba(255,254,248,.72); box-sizing: border-box; color: var(--muted); font-size: 10px; line-height: 1.55; text-align: left; }
+.research-ticket::before { position: absolute; top: -11px; right: 10px; padding: 3px 7px; border: 1.5px solid var(--ink); background: var(--yellow); color: var(--ink); content: "鱼仔资料袋"; font-size: 8px; font-weight: 900; transform: rotate(2deg); }
+.research-ticket-title { display: block; margin-bottom: 4px; color: var(--ink); font-size: 12px; font-weight: 900; }
+
 .loading-step {
   display: flex;
   align-items: center;
@@ -333,6 +344,11 @@
   box-shadow: 6px 6px 0 #000;
   transform: rotate(-1deg);
 }
+
+.error-poster.is-url .error-mark { background: var(--orange); }
+.error-poster.is-evidence .error-mark { color: var(--ink); background: var(--yellow); }
+.error-poster.is-ambiguous .error-mark { background: #378bd6; }
+.recovery-tip { margin: -12px 0 22px; padding: 10px 12px; border-left: 5px solid var(--orange); background: rgba(255,226,92,.35); color: var(--muted); font-size: 11px; font-weight: 800; line-height: 1.55; text-align: left; }
 
 .error-mark {
   display: flex;

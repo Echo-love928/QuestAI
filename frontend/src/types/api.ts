@@ -1,5 +1,17 @@
 export type QuestionType = 'single' | 'multiple' | 'judge'
 export type Difficulty = 'easy' | 'medium' | 'hard'
+export type InputSourceType = 'text' | 'url'
+export type GroundingMode = 'user_content' | 'web_search' | 'url_extract' | 'mixed'
+export type AcquisitionMethod = 'search_snippet' | 'user_url_extract' | 'search_result_extract'
+
+export interface GroundingSource {
+  source_id: string
+  title: string
+  url: string
+  site_name: string
+  acquisition_method: AcquisitionMethod
+  published_at?: string | null
+}
 
 export interface Option {
   key: string
@@ -15,15 +27,19 @@ export interface Question {
   explanation: string
   knowledge_point: string
   difficulty: Difficulty
+  source_ids?: string[]
 }
 
 export interface Quiz {
   quiz_id: string
   title: string
   summary: string
-  source_type: 'text'
+  source_type: InputSourceType
   user_input: string
   questions: Question[]
+  grounding_mode?: GroundingMode
+  sources?: GroundingSource[]
+  researched_at?: string | null
 }
 
 export interface AnswerRecord {

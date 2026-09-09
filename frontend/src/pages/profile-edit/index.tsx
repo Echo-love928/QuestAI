@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 import fishai from '@/assets/fishai.svg'
 import PageHeader from '@/components/PageHeader'
-import StatusBar from '@/components/StatusBar'
 import { updateUserProfile, uploadAvatar } from '@/services/api'
 import { authStorage } from '@/utils/auth-storage'
 
@@ -40,7 +39,6 @@ export default function ProfileEditPage() {
 
   return (
     <View className='screen'>
-      <StatusBar />
       <View className='screen-body user-screen-body edit-profile-body'>
         <PageHeader title='编辑学习档案' trailing={<Button className='edit-save-mini' loading={saving} onClick={save}>保存</Button>} />
         <View className='user-heading'>让鱼仔<Text className='user-heading-mark'>认出你</Text></View>

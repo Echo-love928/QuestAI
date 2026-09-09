@@ -8,10 +8,13 @@ export default defineAppConfig({
     'pages/profile/index',
     'pages/profile-edit/index',
     'pages/history/index',
-    'pages/history-detail/index'
+    'pages/history-detail/index',
+    'pages/source/index'
   ],
   window: {
-    navigationStyle: 'custom',
+    navigationBarTitleText: 'AI闯关学习',
+    navigationBarBackgroundColor: '#fff4c7',
+    navigationBarTextStyle: 'black',
     backgroundTextStyle: 'dark',
     backgroundColor: '#fff4c7'
   }

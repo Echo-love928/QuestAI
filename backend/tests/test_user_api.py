@@ -4,6 +4,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.main import create_app
+from app.research.models import EvidenceSource, ResearchBrief, ResearchFact, ResearchResult
 from app.models.user import (
     QuizHistoryDetail,
     QuizHistoryItem,
@@ -65,6 +66,28 @@ class FakeLearningRepository:
         )
 
     async def get_quiz_detail(self, user_id: int, quiz_id: str):
+        saved = next(
+            (quiz for owner_id, quiz in self.saved_quizzes if owner_id == user_id and quiz.quiz_id == quiz_id),
+            None,
+        )
+        if saved is not None:
+            saved_report = next(
+                (
+                    (payload, report)
+                    for owner_id, payload, report in self.saved_reports
+                    if owner_id == user_id and payload.quiz_id == quiz_id
+                ),
+                None,
+            )
+            return QuizHistoryDetail(
+                quiz=saved.model_dump(mode="json"),
+                answer_records=(
+                    [item.model_dump(mode="json") for item in saved_report[0].answer_records]
+                    if saved_report
+                    else []
+                ),
+                report=saved_report[1].model_dump(mode="json") if saved_report else None,
+            )
         if quiz_id != "quiz_one":
             return None
         return QuizHistoryDetail(
@@ -91,6 +114,41 @@ def authenticated_app():
     )
     token = user_service.tokens.create_access_token(user_service.user.id)
     return app, repository, {"Authorization": f"Bearer {token}"}
+
+
+class GroundedResearcher:
+    async def research(self, request):
+        source = EvidenceSource(
+            source_id="src_verified",
+            title="Verified source",
+            url="https://example.com/current",
+            site_name="example.com",
+            acquisition_method=(
+                "user_url_extract" if request.source_type == "url" else "search_snippet"
+            ),
+            content="Current verified learning material.",
+        )
+        return ResearchResult(
+            grounding_mode="url_extract" if request.source_type == "url" else "web_search",
+            sources=[source],
+            brief=ResearchBrief(
+                resolved_topic="Current topic",
+                domain="software engineering",
+                is_ambiguous=False,
+                is_sufficient=True,
+                summary="Verified learning material",
+                key_facts=[ResearchFact(text="Verified fact", source_ids=[source.source_id])],
+                first_party_source_ids=[source.source_id],
+            ),
+        )
+
+
+class GroundedApiGateway(ApiGateway):
+    async def generate_quiz(self, **kwargs: object) -> dict:
+        result = await super().generate_quiz(**kwargs)
+        for question in result["questions"]:
+            question["source_ids"] = ["src_verified"]
+        return result
 
 
 @pytest.mark.anyio
@@ -174,6 +232,70 @@ async def test_anonymous_core_flow_does_not_write_database() -> None:
     )
     assert response.status_code == 200
     assert repository.saved_quizzes == []
+
+
+@pytest.mark.anyio
+async def test_grounded_anonymous_and_authenticated_flow_reaches_history_detail() -> None:
+    user_service = FakeUserService()
+    repository = FakeLearningRepository()
+    app = create_app(
+        gateway=GroundedApiGateway(),
+        researcher=GroundedResearcher(),
+        user_service=user_service,
+        learning_repository=repository,
+    )
+    token = user_service.tokens.create_access_token(user_service.user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    anonymous = await request(
+        app,
+        "POST",
+        "/api/v1/quiz/generate",
+        json={
+            "user_input": "https://example.com/current",
+            "source_type": "url",
+            "question_count": 3,
+        },
+    )
+    assert anonymous.status_code == 200
+    assert anonymous.json()["data"]["grounding_mode"] == "url_extract"
+    assert repository.saved_quizzes == []
+
+    generated = await request(
+        app,
+        "POST",
+        "/api/v1/quiz/generate",
+        headers=headers,
+        json={"user_input": "Current topic", "question_count": 3},
+    )
+    quiz = generated.json()["data"]
+    report = await request(
+        app,
+        "POST",
+        "/api/v1/report/generate",
+        headers=headers,
+        json={
+            "quiz_id": quiz["quiz_id"],
+            "topic": quiz["title"],
+            "questions": quiz["questions"],
+            "answer_records": [
+                {"question_id": "q1", "selected_answers": ["B"]},
+                {"question_id": "q2", "selected_answers": ["A", "C"]},
+                {"question_id": "q3", "selected_answers": ["A"]},
+            ],
+        },
+    )
+    detail = await request(
+        app,
+        "GET",
+        f"/api/v1/user/quizzes/{quiz['quiz_id']}",
+        headers=headers,
+    )
+
+    assert report.status_code == 200
+    assert detail.status_code == 200
+    assert detail.json()["data"]["quiz"]["sources"][0]["source_id"] == "src_verified"
+    assert detail.json()["data"]["report"]["xp_earned"] == 30
 
 
 @pytest.mark.anyio

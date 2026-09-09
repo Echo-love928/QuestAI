@@ -2,7 +2,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 
-import StatusBar from '@/components/StatusBar'
+import SourcePanel from '@/components/SourcePanel'
 import type { Quiz } from '@/types/api'
 import { learningStorage } from '@/utils/storage'
 
@@ -15,7 +15,7 @@ export default function PreviewPage() {
 
   if (!quiz) {
     return (
-      <View className='screen'><StatusBar /><View className='screen-body center'><View className='empty-title'>还没有生成题目</View><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
+      <View className='screen'><View className='screen-body center'><View className='empty-title'>还没有生成题目</View><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
     )
   }
 
@@ -23,7 +23,6 @@ export default function PreviewPage() {
 
   return (
     <View className='screen preview-screen'>
-      <StatusBar />
       <View className='screen-body preview-body'>
         <View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><View className='xp-pill'>新关卡</View></View>
         <View className='hero-copy'>题目就位，<View className='line-break' /><Text className='scribble'>开闯吧！</Text></View>
@@ -42,6 +41,7 @@ export default function PreviewPage() {
             <View className='road-row' key={point}><Text className='road-num'>{index + 1}</Text><Text>{point}</Text></View>
           ))}
         </View>
+        <SourcePanel mode={quiz.grounding_mode} sources={quiz.sources} researchedAt={quiz.researched_at} legacy={!quiz.grounding_mode} />
         <View className='action-stack preview-actions'>
           <Button className='primary-btn' onClick={() => Taro.navigateTo({ url: '/pages/quiz/index' })}>开始闯关！</Button>
           <Button className='ghost-btn' onClick={() => Taro.navigateBack()}>换一组题</Button>

@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 
 import victory from '@/assets/victory.svg'
 import CoachNote from '@/components/CoachNote'
-import StatusBar from '@/components/StatusBar'
 import type { AnswerRecord, Quiz } from '@/types/api'
 import { learningStorage } from '@/utils/storage'
 
@@ -30,7 +29,7 @@ export default function ResultPage() {
   }, [quiz, records])
 
   if (!quiz) {
-    return <View className='screen'><StatusBar /><View className='screen-body center'><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
+    return <View className='screen'><View className='screen-body center'><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
   }
 
   const minutes = Math.floor(result.duration / 60000)
@@ -43,7 +42,6 @@ export default function ResultPage() {
 
   return (
     <View className='screen result-screen'>
-      <StatusBar />
       <View className='screen-body result-body'>
         <View className='app-bar'><View /><View className='xp-pill'>本关完成</View></View>
         <View className='victory-scene'>
@@ -63,4 +61,3 @@ export default function ResultPage() {
     </View>
   )
 }
-

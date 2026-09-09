@@ -1,15 +1,21 @@
 from typing import Literal
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.research.models import GroundingMode, QuizSource
 
 
 QuestionType = Literal["single", "multiple", "judge"]
 Difficulty = Literal["easy", "medium", "hard"]
 RequestedDifficulty = Literal["easy", "medium", "hard", "mixed"]
+SourceType = Literal["text", "url"]
 
 
 class QuizGenerateRequest(BaseModel):
     user_input: str = Field(min_length=4, max_length=2000)
+    source_type: SourceType = "text"
     question_count: int = Field(default=5, ge=3, le=5)
     difficulty: RequestedDifficulty = "mixed"
 
@@ -36,6 +42,7 @@ class Question(BaseModel):
     explanation: str = Field(min_length=2, max_length=1000)
     knowledge_point: str = Field(min_length=1, max_length=100)
     difficulty: Difficulty
+    source_ids: list[str] = Field(default_factory=list, max_length=8)
 
     @model_validator(mode="after")
     def validate_answer_contract(self) -> "Question":
@@ -70,6 +77,20 @@ class QuizDraft(BaseModel):
 
 class Quiz(QuizDraft):
     quiz_id: str
-    source_type: Literal["text"] = "text"
+    source_type: SourceType = "text"
     user_input: str
+    grounding_mode: GroundingMode = "user_content"
+    sources: list[QuizSource] = Field(default_factory=list, max_length=8)
+    researched_at: datetime | None = None
 
+    @model_validator(mode="after")
+    def validate_grounding_sources(self) -> "Quiz":
+        if self.grounding_mode == "user_content":
+            return self
+        source_ids = {source.source_id for source in self.sources}
+        if not source_ids:
+            raise ValueError("联网题库必须包含来源")
+        for question in self.questions:
+            if not question.source_ids or not set(question.source_ids).issubset(source_ids):
+                raise ValueError("每道联网题目必须引用已知来源")
+        return self

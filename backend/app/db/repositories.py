@@ -108,9 +108,10 @@ class MySQLRepository:
                 await cursor.execute(
                     """
                     INSERT INTO quiz_sessions
-                      (quiz_id, user_id, title, summary, source_type, user_input,
-                       questions_json, question_count)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                      (quiz_id, user_id, title, summary, source_type, grounding_mode,
+                       user_input, questions_json, sources_json, researched_at,
+                       question_count)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE quiz_id = quiz_id
                     """,
                     (
@@ -119,11 +120,17 @@ class MySQLRepository:
                         quiz.title,
                         quiz.summary,
                         quiz.source_type,
+                        quiz.grounding_mode,
                         quiz.user_input,
                         json.dumps(
                             [item.model_dump() for item in quiz.questions],
                             ensure_ascii=False,
                         ),
+                        json.dumps(
+                            [item.model_dump(mode="json") for item in quiz.sources],
+                            ensure_ascii=False,
+                        ),
+                        quiz.researched_at,
                         len(quiz.questions),
                     ),
                 )
@@ -285,6 +292,7 @@ class MySQLRepository:
                 )
                 report = await cursor.fetchone()
         quiz["questions"] = _json_value(quiz.pop("questions_json"))
+        quiz["sources"] = _json_value(quiz.pop("sources_json", None)) or []
         for answer in answers:
             answer["selected_answers"] = _json_value(
                 answer.pop("selected_answers_json")

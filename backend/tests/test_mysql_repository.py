@@ -6,6 +6,7 @@ from app.core.config import Settings
 from app.db.database import Database
 from app.db.repositories import MySQLRepository
 from app.models.quiz import Quiz
+from app.research.models import QuizSource
 from app.models.report import LearningReport, ReportGenerateRequest
 from tests.factories import make_questions
 
@@ -105,6 +106,30 @@ def make_report() -> LearningReport:
     )
 
 
+def make_grounded_quiz() -> Quiz:
+    source = QuizSource(
+        source_id="src_official",
+        title="Official guide",
+        url="https://example.com/guide",
+        site_name="example.com",
+        acquisition_method="search_snippet",
+    )
+    questions = [
+        question.model_copy(update={"source_ids": [source.source_id]})
+        for question in make_questions()
+    ]
+    return Quiz(
+        quiz_id="quiz_mysql_grounded",
+        title="Harness Engineering 闯关",
+        summary="基于当前资料",
+        source_type="text",
+        grounding_mode="web_search",
+        sources=[source],
+        user_input="Harness Engineering",
+        questions=questions,
+    )
+
+
 @pytest.mark.anyio
 async def test_mysql_login_profile_and_history_persistence(mysql_repository) -> None:
     repository = mysql_repository
@@ -148,3 +173,21 @@ async def test_history_is_scoped_to_current_user(mysql_repository) -> None:
     await repository.save_quiz(owner.id, quiz)
 
     assert await repository.get_quiz_detail(stranger.id, quiz.quiz_id) is None
+
+
+@pytest.mark.anyio
+async def test_grounding_source_snapshot_round_trip_without_page_content(
+    mysql_repository,
+) -> None:
+    repository = mysql_repository
+    user = await repository.upsert_by_openid("grounded-user")
+    quiz = make_grounded_quiz()
+
+    await repository.save_quiz(user.id, quiz)
+    detail = await repository.get_quiz_detail(user.id, quiz.quiz_id)
+
+    assert detail is not None
+    assert detail.quiz["grounding_mode"] == "web_search"
+    assert detail.quiz["sources"][0]["source_id"] == "src_official"
+    assert "content" not in detail.quiz["sources"][0]
+    assert detail.quiz["questions"][0]["source_ids"] == ["src_official"]

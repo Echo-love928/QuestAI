@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react'
 import fishai from '@/assets/fishai.svg'
 import BottomNav from '@/components/BottomNav'
 import PageHeader from '@/components/PageHeader'
-import StatusBar from '@/components/StatusBar'
 import { getQuizHistory } from '@/services/api'
 import type { QuizHistoryItem } from '@/types/api'
 
@@ -51,7 +50,6 @@ export default function HistoryPage() {
 
   return (
     <View className='screen'>
-      <StatusBar />
       <View className='screen-body user-screen-body history-body'>
         <PageHeader title='我的闯关' />
         <View className='user-heading'>学过的，都<Text className='user-heading-mark'>算数。</Text></View>

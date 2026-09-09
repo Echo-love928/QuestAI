@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import type {
   AnswerRecord,
   ApiResponse,
+  InputSourceType,
   LearningReport,
   Question,
   Quiz,
@@ -19,6 +20,14 @@ interface RequestOptions {
   allowAnonymous?: boolean
   retryAuth?: boolean
   suppressAuth?: boolean
+  onTask?: (task: ReturnType<typeof Taro.request>) => void
+}
+
+export class ApiError extends Error {
+  constructor(public readonly code: number, message: string, public readonly statusCode: number) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
 async function request<T>(
@@ -31,7 +40,7 @@ async function request<T>(
       await ensureLogin()
       token = authStorage.getToken()
     }
-    const response = await Taro.request<ApiResponse<T>>({
+    const requestTask = Taro.request<ApiResponse<T>>({
       timeout: 60000,
       ...options,
       header: {
@@ -40,6 +49,8 @@ async function request<T>(
         ...options.header
       }
     })
+    behavior.onTask?.(requestTask)
+    const response = await requestTask
     const body = response.data
     if (response.statusCode === 401 && token && behavior.retryAuth !== false) {
       try {
@@ -57,7 +68,7 @@ async function request<T>(
       }
     }
     if (response.statusCode < 200 || response.statusCode >= 300 || body.code !== 0 || !body.data) {
-      throw new Error(body.message || '请求失败，请稍后重试')
+      throw new ApiError(body.code, body.message || '请求失败，请稍后重试', response.statusCode)
     }
     return body.data
   } catch (error) {
@@ -66,19 +77,40 @@ async function request<T>(
   }
 }
 
-export function generateQuiz(userInput: string, questionCount = 5): Promise<Quiz> {
-  return request<Quiz>(
+export interface CancellableRequest<T> {
+  promise: Promise<T>
+  abort: () => void
+}
+
+export function generateQuiz(userInput: string, questionCount = 5, sourceType: InputSourceType = 'text'): CancellableRequest<Quiz> {
+  let requestTask: ReturnType<typeof Taro.request> | null = null
+  let aborted = false
+  const promise = request<Quiz>(
     {
       url: `${API_BASE}/quiz/generate`,
       method: 'POST',
       data: {
         user_input: userInput,
+        source_type: sourceType,
         question_count: questionCount,
         difficulty: 'mixed'
       }
     },
-    { allowAnonymous: true }
+    {
+      allowAnonymous: true,
+      onTask: (task) => {
+        requestTask = task
+        if (aborted) task.abort()
+      }
+    }
   )
+  return {
+    promise,
+    abort: () => {
+      aborted = true
+      if (requestTask) requestTask.abort()
+    }
+  }
 }
 
 export function generateReport(payload: {

@@ -37,7 +37,14 @@ async def generate_quiz(
     request: Request,
     user: Annotated[User | None, Depends(optional_user)],
 ) -> ApiResponse[Quiz]:
-    quiz = await QuizService(request.app.state.gateway).generate(payload)
+    client_key = f"user:{user.id}" if user is not None else (
+        request.client.host if request.client else "anonymous"
+    )
+    request.app.state.quiz_rate_limiter.check(client_key)
+    quiz = await QuizService(
+        request.app.state.gateway,
+        researcher=request.app.state.researcher,
+    ).generate(payload)
     repository = request.app.state.learning_repository
     if user is not None and repository is not None:
         try:

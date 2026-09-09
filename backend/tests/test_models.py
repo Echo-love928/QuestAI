@@ -1,8 +1,9 @@
 import pytest
 from pydantic import ValidationError
 
-from app.models.quiz import Option, Question, QuizGenerateRequest
+from app.models.quiz import Option, Question, Quiz, QuizGenerateRequest
 from app.models.quiz import QuizDraft
+from app.research.models import QuizSource
 from app.models.report import AnswerRecord, LearningReport, ReportGenerateRequest
 from tests.factories import make_questions
 
@@ -116,4 +117,43 @@ def test_report_request_requires_all_question_records() -> None:
                 AnswerRecord(question_id="q2", selected_answers=["A", "C"]),
                 AnswerRecord(question_id="other", selected_answers=["B"]),
             ],
+        )
+
+
+def test_old_quiz_payload_remains_compatible() -> None:
+    quiz = Quiz(
+        quiz_id="quiz_old",
+        title="旧题库",
+        summary="升级前创建的题库",
+        source_type="text",
+        user_input="一段旧资料",
+        questions=make_questions(),
+    )
+
+    assert quiz.grounding_mode == "user_content"
+    assert quiz.sources == []
+    assert all(question.source_ids == [] for question in quiz.questions)
+
+
+def test_network_quiz_requires_known_source_for_every_question() -> None:
+    source = QuizSource(
+        source_id="src_official",
+        title="Official guide",
+        url="https://example.com/guide",
+        site_name="example.com",
+        acquisition_method="search_snippet",
+    )
+    questions = make_questions()
+    questions[0] = questions[0].model_copy(update={"source_ids": ["src_unknown"]})
+
+    with pytest.raises(ValidationError, match="来源"):
+        Quiz(
+            quiz_id="quiz_grounded",
+            title="联网题库",
+            summary="基于最新资料",
+            source_type="text",
+            user_input="Harness Engineering",
+            questions=questions,
+            grounding_mode="web_search",
+            sources=[source],
         )

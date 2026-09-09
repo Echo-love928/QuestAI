@@ -27,6 +27,7 @@ class DeepSeekGateway:
                 max_tokens=6000,
                 timeout=45,
                 max_retries=0,
+                extra_body={"thinking": {"type": "disabled"}},
             )
         self._quiz_chain = QUIZ_PROMPT | model.with_structured_output(
             QuizDraft, method="json_mode"
@@ -37,6 +38,8 @@ class DeepSeekGateway:
 
     async def generate_quiz(self, **kwargs: object) -> dict:
         payload = dict(kwargs)
+        payload.setdefault("grounding_mode", "user_content")
+        payload.setdefault("grounding_context", "仅使用用户提供的学习内容。")
         payload["schema"] = json.dumps(
             QuizDraft.model_json_schema(), ensure_ascii=False
         )

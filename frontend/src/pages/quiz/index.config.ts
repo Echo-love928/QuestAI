@@ -1,2 +1,1 @@
-export default definePageConfig({ navigationStyle: 'custom', disableScroll: false })
-
+export default definePageConfig({ navigationBarTitleText: '答题闯关', disableScroll: false })

@@ -1,5 +1,4 @@
 export default definePageConfig({
-  navigationStyle: 'custom',
+  navigationBarTitleText: 'AI闯关学习',
   disableScroll: false
 })
-

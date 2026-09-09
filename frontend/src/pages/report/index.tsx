@@ -3,7 +3,6 @@ import Taro from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 
 import CoachNote from '@/components/CoachNote'
-import StatusBar from '@/components/StatusBar'
 import { generateReport } from '@/services/api'
 import type { LearningReport, Quiz } from '@/types/api'
 import { learningStorage } from '@/utils/storage'
@@ -48,18 +47,18 @@ export default function ReportPage() {
   }, [])
 
   if (!quiz) {
-    return <View className='screen'><StatusBar /><View className='screen-body center'><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
+    return <View className='screen'><View className='screen-body center'><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
   }
 
   if (loadState === 'loading') {
     return (
-      <View className='screen report-loading'><StatusBar /><View className='screen-body center'><View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><View className='progress-pill'>生成复盘</View></View><View className='report-loader'>80%</View><View className='loading-report-title'>鱼仔正在整理你的答题表现</View><View className='subcopy'>先算准得分，再把薄弱点说清楚。</View><CoachNote>报告里的正确率由程序计算，鱼仔只负责把建议讲明白。</CoachNote></View></View>
+      <View className='screen report-loading'><View className='screen-body center'><View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><View className='progress-pill'>生成复盘</View></View><View className='report-loader'>80%</View><View className='loading-report-title'>鱼仔正在整理你的答题表现</View><View className='subcopy'>先算准得分，再把薄弱点说清楚。</View><CoachNote>报告里的正确率由程序计算，鱼仔只负责把建议讲明白。</CoachNote></View></View>
     )
   }
 
   if (loadState === 'error' || !report) {
     return (
-      <View className='screen'><StatusBar /><View className='screen-body error-report-body'><View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><View /></View><View className='report-error-card'><View className='report-error-mark'>!</View><View className='report-error-title'>复盘暂时没生成出来</View><View className='report-error-copy'>{error}</View></View><Button className='primary-btn' onClick={loadReport}>重新生成报告</Button></View></View>
+      <View className='screen'><View className='screen-body error-report-body'><View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><View /></View><View className='report-error-card'><View className='report-error-mark'>!</View><View className='report-error-title'>复盘暂时没生成出来</View><View className='report-error-copy'>{error}</View></View><Button className='primary-btn' onClick={loadReport}>重新生成报告</Button></View></View>
     )
   }
 
@@ -68,7 +67,6 @@ export default function ReportPage() {
   if (showWeakDetail) {
     return (
       <View className='screen'>
-        <StatusBar />
         <View className='screen-body weak-body'>
           <View className='app-bar'><Button className='icon-btn' onClick={() => setShowWeakDetail(false)}>←</Button><Text className='bar-title'>红笔重点区</Text><View className='xp-pill'>{report.weak_points.length} 项</View></View>
           <View className='weak-card'>
@@ -95,7 +93,6 @@ export default function ReportPage() {
 
   return (
     <View className='screen'>
-      <StatusBar />
       <View className='screen-body report-body'>
         <View className='app-bar'><Button className='icon-btn' onClick={() => Taro.navigateBack()}>←</Button><Text className='bar-title'>本次复盘</Text><Button className='icon-btn' onClick={() => Taro.showToast({ title: '报告已保存在本机', icon: 'none' })}>···</Button></View>
         <View className='report-hero'>
@@ -115,4 +112,3 @@ export default function ReportPage() {
     </View>
   )
 }
-

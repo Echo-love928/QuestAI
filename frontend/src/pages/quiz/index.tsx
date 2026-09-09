@@ -2,7 +2,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useMemo, useRef, useState } from 'react'
 
-import StatusBar from '@/components/StatusBar'
+import SourcePanel from '@/components/SourcePanel'
 import type { AnswerRecord, Question, Quiz } from '@/types/api'
 import { learningStorage } from '@/utils/storage'
 
@@ -38,7 +38,7 @@ export default function QuizPage() {
   }, [quiz, selectedById, submittedById])
 
   if (!quiz) {
-    return <View className='screen'><StatusBar /><View className='screen-body center'><View className='missing-copy'>题目走丢了，请重新生成。</View><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
+    return <View className='screen'><View className='screen-body center'><View className='missing-copy'>题目走丢了，请重新生成。</View><Button className='primary-btn' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>返回首页</Button></View></View>
   }
 
   const question = quiz.questions[currentIndex]
@@ -96,7 +96,6 @@ export default function QuizPage() {
 
   return (
     <View className='screen quiz-screen'>
-      <StatusBar />
       <View className='screen-body quiz-body'>
         <View className='quiz-top'>
           <Button className='quiz-close' onClick={() => Taro.showModal({ title: '退出闯关？', content: '当前答题进度不会保存。', success: (res) => res.confirm && Taro.navigateBack() })}>×</Button>
@@ -135,7 +134,7 @@ export default function QuizPage() {
         ) : (
           <>
             <View className={`feedback-banner ${correct ? '' : 'wrong'}`}><Text>{correct ? '✓ 答对啦' : '× 需要订正'}</Text><Text>{correct ? '+10 XP' : '本题 0 XP'}</Text></View>
-            <View className='explanation'><View className='explanation-title'>{correct ? '为什么这样选？' : '到底差在哪？'}</View><View className='explanation-copy'>{question.explanation}</View></View>
+            <View className='explanation'><View className='explanation-title'>{correct ? '为什么这样选？' : '到底差在哪？'}</View><View className='explanation-copy'>{question.explanation}</View><SourcePanel compact title='本题依据' mode={quiz.grounding_mode} sources={quiz.sources} researchedAt={quiz.researched_at} sourceIds={question.source_ids} legacy={!quiz.grounding_mode} /></View>
           </>
         )}
 
@@ -147,4 +146,3 @@ export default function QuizPage() {
     </View>
   )
 }
-

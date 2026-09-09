@@ -11,14 +11,24 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import router
 from app.core.config import get_settings
-from app.core.exceptions import ModelGenerationError
+from app.core.exceptions import (
+    EvidenceInsufficient,
+    ExtractUnavailable,
+    ModelGenerationError,
+    ResearchBudgetExceeded,
+    ResearchUnavailable,
+    SearchUnavailable,
+    TopicAmbiguous,
+)
 from app.core.security import TokenManager
-from app.core.rate_limit import SlidingWindowRateLimiter
+from app.core.rate_limit import RateLimitExceeded, SlidingWindowRateLimiter
 from app.db.database import Database
 from app.db.repositories import MySQLRepository
 from app.integrations.wechat import WechatGateway
-from app.llm.base import LearningModelGateway
+from app.llm.base import LearningModelGateway, ResearchGateway
 from app.llm.deepseek_gateway import DeepSeekGateway
+from app.research.agent import ResearchAgent
+from app.research.safety import UnsafeUrlError
 from app.services.user_service import UserService
 
 
@@ -28,6 +38,7 @@ def error_payload(code: int, message: str) -> dict:
 
 def create_app(
     gateway: LearningModelGateway | None = None,
+    researcher: ResearchGateway | None = None,
     user_service: UserService | None = None,
     learning_repository: MySQLRepository | None = None,
     upload_dir: Path | None = None,
@@ -66,6 +77,11 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.gateway = gateway or DeepSeekGateway(settings)
+    app.state.researcher = researcher or (
+        ResearchAgent(settings)
+        if gateway is None and settings.web_research_enabled
+        else None
+    )
     app.state.user_service = user_service
     app.state.learning_repository = learning_repository
     avatar_dir = upload_dir or (Path(__file__).resolve().parents[1] / "uploads" / "avatars")
@@ -74,6 +90,11 @@ def create_app(
     app.state.upload_base_url = (upload_base_url or settings.upload_base_url).rstrip("/")
     app.state.login_rate_limiter = SlidingWindowRateLimiter(
         limit=10, window=timedelta(minutes=1)
+    )
+    app.state.quiz_rate_limiter = SlidingWindowRateLimiter(
+        limit=10,
+        window=timedelta(minutes=1),
+        message="题目生成请求过于频繁，请稍后重试",
     )
     app.mount("/uploads/avatars", StaticFiles(directory=avatar_dir), name="avatars")
     app.add_middleware(
@@ -102,6 +123,62 @@ def create_app(
             status_code=503,
             content=error_payload(5001, "AI 生成失败，请稍后重试"),
         )
+
+    async def research_error_response(
+        status_code: int, code: int, message: str
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status_code,
+            content=error_payload(code, message),
+        )
+
+    @app.exception_handler(SearchUnavailable)
+    async def search_error_handler(
+        _request: Request, _exc: SearchUnavailable
+    ) -> JSONResponse:
+        return await research_error_response(503, 5101, "暂时无法获取最新资料，请稍后重试")
+
+    @app.exception_handler(ExtractUnavailable)
+    async def extract_error_handler(
+        _request: Request, _exc: ExtractUnavailable
+    ) -> JSONResponse:
+        return await research_error_response(503, 5102, "暂时无法读取网页，请检查网址或稍后重试")
+
+    @app.exception_handler(EvidenceInsufficient)
+    async def evidence_error_handler(
+        _request: Request, _exc: EvidenceInsufficient
+    ) -> JSONResponse:
+        return await research_error_response(422, 4102, "资料不足，请补充更明确的主题或原始内容")
+
+    @app.exception_handler(TopicAmbiguous)
+    async def ambiguous_error_handler(
+        _request: Request, _exc: TopicAmbiguous
+    ) -> JSONResponse:
+        return await research_error_response(409, 4103, "主题存在多种含义，请补充所属领域")
+
+    @app.exception_handler(ResearchBudgetExceeded)
+    async def budget_error_handler(
+        _request: Request, _exc: ResearchBudgetExceeded
+    ) -> JSONResponse:
+        return await research_error_response(503, 4104, "本次资料获取已达上限，请缩小主题后重试")
+
+    @app.exception_handler(ResearchUnavailable)
+    async def research_unavailable_handler(
+        _request: Request, _exc: ResearchUnavailable
+    ) -> JSONResponse:
+        return await research_error_response(503, 5100, "联网研究暂时不可用，请稍后重试")
+
+    @app.exception_handler(UnsafeUrlError)
+    async def unsafe_url_handler(
+        _request: Request, _exc: UnsafeUrlError
+    ) -> JSONResponse:
+        return await research_error_response(400, 4101, "网址不可访问，请使用公开的 HTTP(S) 网页")
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(
+        _request: Request, exc: RateLimitExceeded
+    ) -> JSONResponse:
+        return await research_error_response(429, 4290, str(exc))
 
     @app.exception_handler(ValueError)
     async def value_error_handler(

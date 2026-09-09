@@ -690,6 +690,76 @@
     .loading-step.is-current { background: #ffe7b8; }
     .loading-step.is-current .step-dot { background: var(--orange); }
 
+    .research-ticket {
+      position: relative;
+      margin: 14px 0;
+      padding: 14px;
+      border: 2px dashed var(--ink);
+      border-radius: 15px 12px 17px 13px;
+      background: rgba(255, 254, 248, .72);
+      text-align: left;
+    }
+
+    .research-ticket::before {
+      content: "鱼仔资料袋";
+      position: absolute;
+      top: -11px;
+      right: 12px;
+      padding: 3px 7px;
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      font-size: 9px;
+      font-weight: 900;
+      transform: rotate(2deg);
+    }
+
+    .research-ticket strong { display: block; margin-bottom: 5px; font-size: 13px; }
+    .research-ticket p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+
+    .research-route {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin: 14px 0 18px;
+    }
+
+    .route-stop {
+      position: relative;
+      padding: 10px 4px;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      background: var(--white);
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .route-stop.is-done { background: #dff5e8; }
+    .route-stop.is-current { background: #ffe1b7; box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px, -1px); }
+    .route-stop b { display: block; margin-bottom: 4px; font-size: 20px; }
+
+    .url-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: -5px 2px 12px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .url-hint::before {
+      content: "↗";
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--yellow);
+    }
+
     .error-poster {
       margin: 18px 0;
       padding: 22px 18px;
@@ -715,6 +785,92 @@
 
     .error-poster h3 { margin: 0 0 8px; font-size: 22px; }
     .error-poster p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+    .error-poster.is-url .error-mark { background: var(--orange); }
+    .error-poster.is-evidence .error-mark { color: var(--ink); background: var(--yellow); }
+    .error-poster.is-ambiguous .error-mark { background: var(--blue); }
+
+    .source-dossier {
+      margin: 0 0 16px;
+      padding: 13px;
+      border: 2px solid var(--ink);
+      border-radius: 15px 12px 18px 13px;
+      background: rgba(255, 254, 248, .8);
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .source-dossier-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .source-dossier-head strong { font-size: 12px; }
+    .source-dossier-head span { color: var(--muted); font-size: 9px; font-weight: 800; }
+
+    .source-list { display: grid; gap: 7px; }
+
+    .source-item {
+      display: grid;
+      grid-template-columns: 31px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1.5px solid rgba(32, 35, 43, .28);
+      border-radius: 10px;
+      background: var(--white);
+      text-align: left;
+    }
+
+    .source-logo {
+      display: grid;
+      place-items: center;
+      width: 31px;
+      height: 31px;
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      background: var(--yellow);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .source-item strong { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .source-item small { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+
+    .source-badge {
+      padding: 3px 5px;
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      background: #dff5e8;
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .citation-strip {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 2px dashed rgba(32, 35, 43, .24);
+    }
+
+    .citation-strip strong { display: block; margin-bottom: 6px; font-size: 10px; }
+    .citation-link { display: inline-block; margin: 0 5px 4px 0; padding: 4px 7px; border: 1.5px solid var(--ink); border-radius: 999px; background: var(--yellow); font-size: 8px; font-weight: 900; }
+
+    .source-dossier.is-compact { margin-top: 12px; box-shadow: 3px 3px 0 var(--ink); }
+    .source-dossier.is-compact .source-item { padding: 7px; }
+
+    .recovery-tip {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-left: 5px solid var(--orange);
+      background: rgba(255, 226, 92, .35);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.55;
+      text-align: left;
+    }
 
     .topic-card {
       position: relative;
@@ -1531,13 +1687,30 @@
     body.focus-home .page-footer { display: none; }
 
     body.focus-home .board {
-      grid-template-columns: repeat(2, minmax(320px, 390px));
+      grid-template-columns: repeat(3, minmax(320px, 390px));
       padding-top: 28px;
     }
 
     body.focus-home .prototype-card { display: none; }
     body.focus-home #stage-01,
-    body.focus-home #stage-02 { display: block; }
+    body.focus-home #stage-02,
+    body.focus-home #stage-02-url { display: block; }
+
+    body.focus-research .page-header,
+    body.focus-research .page-footer { display: none; }
+
+    body.focus-research .board {
+      grid-template-columns: repeat(3, minmax(320px, 390px));
+      padding-top: 28px;
+    }
+
+    body.focus-research .prototype-card { display: none; }
+    body.focus-research #stage-03,
+    body.focus-research #stage-03-extract,
+    body.focus-research #stage-03-verify,
+    body.focus-research #stage-04-url,
+    body.focus-research #stage-04-evidence,
+    body.focus-research #stage-04-ambiguous { display: block; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -1615,8 +1788,8 @@
             <span class="input-counter"><span id="input-count">0</span>/2000</span>
           </div>
           <div class="source-row" aria-label="内容来源">
-            <button class="source-chip is-active" type="button">文本</button>
-            <button class="source-chip" type="button" data-toast="URL 导入将在第二组原型中展开">URL</button>
+            <button class="source-chip is-active" type="button" data-input-mode="text">文本</button>
+            <button class="source-chip" type="button" data-input-mode="url">URL</button>
             <button class="source-chip" type="button" data-toast="文件导入将在第二组原型中展开">文件</button>
             <button class="source-chip" type="button" data-toast="视频导入将在第二组原型中展开">视频</button>
           </div>
@@ -1650,8 +1823,8 @@
             <span class="input-counter">34/2000</span>
           </div>
           <div class="source-row">
-            <button class="source-chip is-active" type="button">文本</button>
-            <button class="source-chip" type="button">URL</button>
+            <button class="source-chip is-active" type="button" data-input-mode="text">文本</button>
+            <button class="source-chip" type="button" data-input-mode="url">URL</button>
             <button class="source-chip" type="button">文件</button>
             <button class="source-chip" type="button">视频</button>
           </div>
@@ -1667,26 +1840,110 @@
       </div></div>
     </article>
 
+    <article class="prototype-card" id="stage-02-url">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">02A</span>网页已输入</h2><p class="prototype-note">粘贴网址后，鱼仔会先把整页读完</p></div>
+        <span class="state-tag">URL READY</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:41</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body">
+          <div class="app-bar">
+            <div class="brand"><span class="brand-badge"><svg aria-hidden="true"><use href="#fishai"/></svg></span>AI闯关学习</div>
+            <span class="xp-pill"><span class="star">★</span> 0 XP</span>
+          </div>
+          <h3 class="hero-copy home-one-liner">网页已收到，<br><span class="scribble">读完再为你出题。</span></h3>
+          <div class="input-wrap">
+            <textarea aria-label="网页地址">https://docs.langchain.com/oss/python/langchain/agents</textarea>
+            <span class="input-counter">公开网页</span>
+          </div>
+          <div class="source-row" aria-label="内容来源">
+            <button class="source-chip" type="button">文本</button>
+            <button class="source-chip is-active" type="button">URL</button>
+            <button class="source-chip" type="button">文件</button>
+            <button class="source-chip" type="button">视频</button>
+          </div>
+          <p class="url-hint">支持公开的 HTTP / HTTPS 网页，不会访问登录页或内网页面</p>
+          <button class="ghost-btn" type="button" data-toast="生成设置：5 题 · 综合难度">⚙ 5 题 · 综合难度</button>
+          <div style="height:12px"></div>
+          <button class="primary-btn" type="button" data-jump="#stage-03-extract">读取网页并生成 →</button>
+          <div class="research-ticket"><strong>这次会怎么做？</strong><p>鱼仔先提取原网页；如果页面只讲了一半，再去找必要的补充资料，并把两类来源分开标记。</p></div>
+        </div>
+      </div></div>
+    </article>
+
     <article class="prototype-card" id="stage-03">
       <div class="prototype-meta">
-        <div><h2 class="prototype-name"><span class="prototype-index">03</span>AI 生成中</h2><p class="prototype-note">具体展示系统正在完成什么</p></div>
-        <span class="state-tag">LOADING</span>
+        <div><h2 class="prototype-name"><span class="prototype-index">03</span>正在搜索资料</h2><p class="prototype-note">关键词模式先找到新鲜、相关的资料</p></div>
+        <span class="state-tag">SEARCHING</span>
       </div>
       <div class="phone"><div class="screen">
         <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
         <div class="screen-body center">
-          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">×</button><span class="progress-pill">约 12 秒</span></div>
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">×</button><span class="progress-pill">正在联网</span></div>
           <svg class="mascot-large" aria-label="学习搭档鱼仔"><use href="#fishai"/></svg>
-          <h3 class="loading-title">鱼仔正在认真出题</h3>
-          <p class="subcopy">把 RAG 拆成五块容易记住的知识。</p>
-          <div class="pencil-loader" aria-label="正在生成"><span class="pencil"></span></div>
+          <h3 class="loading-title">鱼仔正在翻最新资料</h3>
+          <p class="subcopy">先认准 Harness Engineering 属于哪个领域。</p>
+          <div class="research-route" aria-label="资料研究进度"><span class="route-stop is-done"><b>✓</b>理解主题</span><span class="route-stop is-current"><b>⌕</b>搜索资料</span><span class="route-stop"><b>□</b>核对依据</span></div>
+          <div class="research-ticket"><strong>正在查：Harness Engineering</strong><p>保留英文原词，优先寻找软件工程领域的第一方说明和近期资料。</p></div>
           <div class="loading-list">
-            <div class="loading-step"><span class="step-dot">✓</span>读懂输入内容</div>
-            <div class="loading-step"><span class="step-dot">✓</span>找出核心知识点</div>
-            <div class="loading-step is-current"><span class="step-dot">✎</span>编写题目与讲解</div>
+            <div class="loading-step"><span class="step-dot">✓</span>识别领域与关键词</div>
+            <div class="loading-step is-current"><span class="step-dot">⌕</span>搜索并比较多个来源</div>
+            <div class="loading-step"><span class="step-dot">3</span>挑选值得细读的页面</div>
           </div>
-          <button class="mini-link" type="button" data-jump="#stage-04">查看失败状态</button>
-          <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>先别划走，题目马上从草稿纸里蹦出来。</div>
+          <button class="mini-link" type="button" data-jump="#stage-03-extract">查看网页提取状态</button>
+          <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>先找对资料再出题，别让旧知识抢答。</div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="prototype-card" id="stage-03-extract">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">03A</span>正在读取网页</h2><p class="prototype-note">URL 模式先提取整页，再判断是否补充搜索</p></div>
+        <span class="state-tag">EXTRACTING</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body center">
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">×</button><span class="progress-pill">读取网页</span></div>
+          <svg class="mascot-large" aria-label="学习搭档鱼仔"><use href="#fishai"/></svg>
+          <h3 class="loading-title">鱼仔把网页装进资料袋</h3>
+          <p class="subcopy">正在提取正文，广告和页面按钮不会拿来出题。</p>
+          <div class="research-route"><span class="route-stop is-done"><b>✓</b>检查网址</span><span class="route-stop is-current"><b>↗</b>读取正文</span><span class="route-stop"><b>□</b>核对依据</span></div>
+          <div class="research-ticket"><strong>docs.langchain.com / Agents</strong><p>已读取标题与正文，正在寻找与“工具选择”直接相关的段落。</p></div>
+          <div class="loading-list">
+            <div class="loading-step"><span class="step-dot">✓</span>确认是公开安全网页</div>
+            <div class="loading-step is-current"><span class="step-dot">↗</span>提取主要内容</div>
+            <div class="loading-step"><span class="step-dot">3</span>判断是否需要补充资料</div>
+          </div>
+          <button class="mini-link" type="button" data-jump="#stage-03-verify">查看资料核对状态</button>
+          <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>网页里的命令只当文字看，谁也不能指挥鱼仔改规则。</div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="prototype-card" id="stage-03-verify">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">03B</span>正在核对依据</h2><p class="prototype-note">资料够用才进入题目生成</p></div>
+        <span class="state-tag">VERIFYING</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body center">
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">×</button><span class="progress-pill">3 份资料</span></div>
+          <svg class="mascot-large" aria-label="学习搭档鱼仔"><use href="#fishai"/></svg>
+          <h3 class="loading-title">鱼仔正在交叉核对</h3>
+          <p class="subcopy">先确认领域、更新时间和关键事实，再动笔出题。</p>
+          <div class="research-route"><span class="route-stop is-done"><b>✓</b>找到资料</span><span class="route-stop is-done"><b>✓</b>读取正文</span><span class="route-stop is-current"><b>≋</b>核对依据</span></div>
+          <div class="source-dossier">
+            <div class="source-dossier-head"><strong>资料袋里有 3 份依据</strong><span>刚刚更新</span></div>
+            <div class="source-list">
+              <div class="source-item"><span class="source-logo">L</span><span><strong>LangChain Agents</strong><small>docs.langchain.com · 网页正文</small></span><span class="source-badge">第一方</span></div>
+              <div class="source-item"><span class="source-logo">T</span><span><strong>Tavily Search</strong><small>docs.tavily.com · 搜索摘要</small></span><span class="source-badge">互证</span></div>
+            </div>
+          </div>
+          <button class="mini-link" type="button" data-jump="#stage-05">资料够了，继续生成题目</button>
+          <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>来源能对上，题目才准许从草稿纸里蹦出来。</div>
         </div>
       </div></div>
     </article>
@@ -1710,6 +1967,58 @@
             <button class="ghost-btn" type="button" data-jump="#stage-02">返回修改内容</button>
           </div>
           <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>不是你写得不对，是网络掉了一拍。内容没有丢。</div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="prototype-card" id="stage-04-url">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">04A</span>网址不可读取</h2><p class="prototype-note">指出具体网址问题，原输入完整保留</p></div>
+        <span class="state-tag">URL ERROR</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body center">
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">←</button><span class="progress-pill">网页没读到</span></div>
+          <div class="error-poster is-url"><div class="error-mark">↗</div><h3>这个网址暂时读不到</h3><p>它可能需要登录、属于内网页面，或不是完整的 HTTP / HTTPS 地址。</p></div>
+          <p class="recovery-tip">原网址还在：docs.langchain.com/…<br>检查开头和访问权限后再试。</p>
+          <div class="action-stack"><button class="primary-btn" type="button" data-jump="#stage-02-url">检查网址</button><button class="ghost-btn" type="button" data-jump="#stage-01">改用关键词搜索</button></div>
+          <div class="coach-note"><svg class="mascot" aria-hidden="true"><use href="#fishai"/></svg>鱼仔不会偷偷访问登录页或内网地址。</div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="prototype-card" id="stage-04-evidence">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">04B</span>资料不足</h2><p class="prototype-note">不以旧知识补位，邀请用户补充范围</p></div>
+        <span class="state-tag">NEED SOURCES</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body center">
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">←</button><span class="progress-pill">依据不足</span></div>
+          <div class="error-poster is-evidence"><div class="error-mark">?</div><h3>还缺一块关键资料</h3><p>目前只找到零散提及，无法确认核心定义，鱼仔先不凭旧记忆出题。</p></div>
+          <div class="source-dossier is-compact"><div class="source-dossier-head"><strong>已找到 1 份弱相关资料</strong><span>不足以出题</span></div><div class="source-list"><div class="source-item"><span class="source-logo">S</span><span><strong>搜索结果摘要</strong><small>仅提到术语，没有完整定义</small></span><span class="source-badge">待互证</span></div></div></div>
+          <div class="action-stack"><button class="primary-btn" type="button" data-jump="#stage-03">重新获取资料</button><button class="ghost-btn" type="button" data-jump="#stage-02">补充学习范围</button></div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="prototype-card" id="stage-04-ambiguous">
+      <div class="prototype-meta">
+        <div><h2 class="prototype-name"><span class="prototype-index">04C</span>主题有歧义</h2><p class="prototype-note">让用户选领域，避免同名概念答非所问</p></div>
+        <span class="state-tag">CLARIFY</span>
+      </div>
+      <div class="phone"><div class="screen">
+        <div class="status-bar"><span>9:42</span><span class="status-icons">● ◒ ▰</span></div>
+        <div class="screen-body center">
+          <div class="app-bar"><button class="icon-btn" type="button" aria-label="返回">←</button><span class="progress-pill">先对准领域</span></div>
+          <div class="error-poster is-ambiguous"><div class="error-mark">≋</div><h3>你想学哪一种 Harness？</h3><p>这个词在多个领域都有含义。选准方向后，鱼仔再继续查资料。</p></div>
+          <div class="answer-list" data-choice-group="single">
+            <button class="option" type="button"><span class="option-key">A</span><span><strong>软件工程</strong><br>AI Agent 的 Harness Engineering</span></button>
+            <button class="option" type="button"><span class="option-key">B</span><span><strong>线束工程</strong><br>汽车与电子系统的 wiring harness</span></button>
+          </div>
+          <div class="action-stack"><button class="primary-btn" type="button" data-jump="#stage-03">选好了，继续搜索</button><button class="ghost-btn" type="button" data-jump="#stage-02">返回补充描述</button></div>
         </div>
       </div></div>
     </article>
@@ -1738,6 +2047,13 @@
             <div class="road-row"><span class="road-num">1</span>基本概念：RAG 是什么</div>
             <div class="road-row"><span class="road-num">2</span>关键流程：先检索，再生成</div>
             <div class="road-row"><span class="road-num">3</span>应用边界：什么时候值得用</div>
+          </div>
+          <div class="source-dossier is-compact">
+            <div class="source-dossier-head"><strong>本关依据 · 3 份</strong><span>联网核对于 9:42</span></div>
+            <div class="source-list">
+              <div class="source-item"><span class="source-logo">L</span><span><strong>LangChain 官方文档</strong><small>网页正文 · 第一方来源</small></span><span class="source-badge">S1</span></div>
+              <div class="source-item"><span class="source-logo">I</span><span><strong>IBM · RAG 介绍</strong><small>网页正文 · 交叉验证</small></span><span class="source-badge">S2</span></div>
+            </div>
           </div>
           <div class="action-stack">
             <button class="primary-btn" type="button" data-jump="#stage-06">开始闯关！</button>
@@ -1844,6 +2160,7 @@
           <details class="explanation" open>
             <summary>为什么选 B？</summary>
             <p>RAG 会先从外部知识源取回相关内容，再把这些内容交给模型组织答案。这样能补充模型没有记住或已经过时的信息。</p>
+            <div class="citation-strip"><strong>本题依据</strong><span class="citation-link">S1 · LangChain 文档 ↗</span><span class="citation-link">S2 · IBM 介绍 ↗</span></div>
           </details>
           <div class="quiz-actions"><button class="ghost-btn" type="button" data-jump="#stage-06">上一题</button><button class="primary-btn" type="button" data-jump="#stage-07">继续 →</button></div>
         </div>
@@ -1872,6 +2189,7 @@
           <details class="explanation" open>
             <summary>到底差在哪？</summary>
             <p>RAG 能提供依据，但检索可能漏掉资料，模型也可能误解资料。因此它能降低错误概率，却不能承诺“绝不出错”。</p>
+            <div class="citation-strip"><strong>本题依据</strong><span class="citation-link">S2 · IBM 介绍 ↗</span></div>
           </details>
           <div class="quiz-actions"><button class="ghost-btn" type="button" data-jump="#stage-08">上一题</button><button class="primary-btn" type="button" data-jump="#stage-11">记住了，继续 →</button></div>
         </div>
@@ -2050,14 +2368,37 @@
     const learningInput = document.getElementById('learning-input');
     const inputCount = document.getElementById('input-count');
     const emptyGenerate = document.getElementById('empty-generate');
-    learningInput.addEventListener('input', () => {
-      const length = learningInput.value.trim().length;
+    const homeSourceRow = learningInput.closest('.screen-body').querySelector('.source-row');
+    let inputMode = 'text';
+
+    const validateLearningInput = () => {
+      const value = learningInput.value.trim();
       inputCount.textContent = learningInput.value.length;
-      emptyGenerate.disabled = length < 4;
+      const validText = value.length >= 4;
+      const validUrl = /^https?:\/\/[^\s]+$/i.test(value);
+      emptyGenerate.disabled = inputMode === 'url' ? !validUrl : !validText;
+      emptyGenerate.dataset.jump = inputMode === 'url' ? '#stage-03-extract' : '#stage-03';
+    };
+
+    learningInput.addEventListener('input', validateLearningInput);
+
+    homeSourceRow.querySelectorAll('[data-input-mode]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        inputMode = chip.dataset.inputMode;
+        learningInput.value = '';
+        learningInput.placeholder = inputMode === 'url'
+          ? '粘贴公开网页地址，例如：https://docs.example.com/guide'
+          : '例如：我想弄懂 RAG 和普通搜索有什么区别';
+        inputCount.textContent = '0';
+        validateLearningInput();
+        learningInput.focus();
+      });
     });
 
     document.querySelectorAll('[data-fill]').forEach((card) => {
       card.addEventListener('click', () => {
+        inputMode = 'text';
+        homeSourceRow.querySelectorAll('.source-chip').forEach((chip) => chip.classList.toggle('is-active', chip.dataset.inputMode === 'text'));
         learningInput.value = card.dataset.fill;
         learningInput.dispatchEvent(new Event('input'));
         learningInput.focus();
@@ -2070,6 +2411,8 @@
       document.body.classList.add('focus-home');
     } else if (focusStage === 'quiz') {
       document.body.classList.add('focus-quiz');
+    } else if (focusStage === 'research') {
+      document.body.classList.add('focus-research');
     } else if (focusStage) {
       const focusedCard = document.getElementById(focusStage);
       if (focusedCard) {

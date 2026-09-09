@@ -47,23 +47,8 @@ button::after {
 .screen-body {
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - 44px);
+  min-height: 100vh;
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
-}
-
-.status-bar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  height: calc(44px + env(safe-area-inset-top));
-  padding: env(safe-area-inset-top) 20px 8px;
-  font-size: 11px;
-  font-weight: 900;
-  background: rgba(255, 244, 199, 0.92);
-}
-
-.status-icons {
-  letter-spacing: 2px;
 }
 
 .app-bar {
@@ -270,4 +255,3 @@ button::after {
     animation: none;
   }
 }
-

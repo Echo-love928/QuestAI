@@ -5,7 +5,6 @@ import { useState } from 'react'
 import fishai from '@/assets/fishai.svg'
 import BottomNav from '@/components/BottomNav'
 import BrandBar from '@/components/BrandBar'
-import StatusBar from '@/components/StatusBar'
 import { ensureLogin } from '@/services/auth'
 import { getQuizHistory, getUserProfile } from '@/services/api'
 import type { QuizHistoryItem, UserProfile } from '@/types/api'
@@ -45,16 +44,15 @@ export default function ProfilePage() {
   useDidShow(() => { void load() })
 
   if (state === 'loading') {
-    return <View className='screen'><StatusBar /><View className='screen-body user-screen-body'><BrandBar /><View className='user-loading'><Text className='user-state-icon'>🐟</Text><View className='user-state-title'>鱼仔正在翻找档案</View><View className='user-state-copy'>成长记录马上就来。</View></View><BottomNav active='profile' /></View></View>
+    return <View className='screen'><View className='screen-body user-screen-body'><BrandBar /><View className='user-loading'><Text className='user-state-icon'>🐟</Text><View className='user-state-title'>鱼仔正在翻找档案</View><View className='user-state-copy'>成长记录马上就来。</View></View><BottomNav active='profile' /></View></View>
   }
 
   if (state === 'error' || !profile) {
-    return <View className='screen'><StatusBar /><View className='screen-body user-screen-body'><BrandBar /><View className='user-heading'>鱼仔暂时没认出你</View><View className='user-subcopy'>原有出题和答题功能仍可匿名使用。</View><View className='user-error'><Text className='user-state-icon'>📡</Text><View className='user-state-title'>学习档案连接失败</View><View className='user-state-copy'>{message || '检查网络后重新连接。'}</View><Button className='primary-btn user-state-action' onClick={load}>重新连接 →</Button><Button className='ghost-btn profile-anonymous' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>先去匿名闯关</Button></View><BottomNav active='profile' /></View></View>
+    return <View className='screen'><View className='screen-body user-screen-body'><BrandBar /><View className='user-heading'>鱼仔暂时没认出你</View><View className='user-subcopy'>原有出题和答题功能仍可匿名使用。</View><View className='user-error'><Text className='user-state-icon'>📡</Text><View className='user-state-title'>学习档案连接失败</View><View className='user-state-copy'>{message || '检查网络后重新连接。'}</View><Button className='primary-btn user-state-action' onClick={load}>重新连接 →</Button><Button className='ghost-btn profile-anonymous' onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>先去匿名闯关</Button></View><BottomNav active='profile' /></View></View>
   }
 
   return (
     <View className='screen'>
-      <StatusBar />
       <View className='screen-body user-screen-body profile-body'>
         <BrandBar trailing={<View className='xp-pill'><Text className='star'>★</Text><Text>{profile.total_xp} XP</Text></View>} />
         <View className='profile-card'>
