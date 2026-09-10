@@ -11,6 +11,7 @@ QuestionType = Literal["single", "multiple", "judge"]
 Difficulty = Literal["easy", "medium", "hard"]
 RequestedDifficulty = Literal["easy", "medium", "hard", "mixed"]
 SourceType = Literal["text", "url"]
+SourceScope = Literal["web", "private", "mixed"]
 
 
 class QuizGenerateRequest(BaseModel):
@@ -18,6 +19,10 @@ class QuizGenerateRequest(BaseModel):
     source_type: SourceType = "text"
     question_count: int = Field(default=5, ge=3, le=5)
     difficulty: RequestedDifficulty = "mixed"
+    source_scope: SourceScope | None = Field(default=None, exclude_if=lambda value: value is None)
+    knowledge_base_ids: list[int] = Field(
+        default_factory=list, max_length=5, exclude_if=lambda value: not value
+    )
 
     @field_validator("user_input")
     @classmethod
@@ -26,6 +31,23 @@ class QuizGenerateRequest(BaseModel):
         if len(cleaned) < 4:
             raise ValueError("学习内容至少需要 4 个字符")
         return cleaned
+
+    @field_validator("knowledge_base_ids")
+    @classmethod
+    def unique_knowledge_base_ids(cls, value: list[int]) -> list[int]:
+        if any(item <= 0 for item in value):
+            raise ValueError("知识库 ID 无效")
+        return list(dict.fromkeys(value))
+
+    @model_validator(mode="after")
+    def validate_source_scope(self) -> "QuizGenerateRequest":
+        if self.source_scope in {"private", "mixed"} and not self.knowledge_base_ids:
+            raise ValueError("私有资料出题必须选择知识库")
+        if self.source_scope == "web" and self.knowledge_base_ids:
+            raise ValueError("联网模式不能携带知识库")
+        if self.source_type == "url" and self.source_scope in {"private", "mixed"}:
+            raise ValueError("网页 URL 不能作为私有知识库查询")
+        return self
 
 
 class Option(BaseModel):
@@ -93,4 +115,12 @@ class Quiz(QuizDraft):
         for question in self.questions:
             if not question.source_ids or not set(question.source_ids).issubset(source_ids):
                 raise ValueError("每道联网题目必须引用已知来源")
+            if self.grounding_mode in {"private", "hybrid"}:
+                private_ids = {
+                    source.source_id
+                    for source in self.sources
+                    if source.source_type == "private_document"
+                }
+                if not set(question.source_ids) & private_ids:
+                    raise ValueError("每道私有资料题目必须引用私有文档")
         return self

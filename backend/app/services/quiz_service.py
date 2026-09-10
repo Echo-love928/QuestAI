@@ -7,6 +7,8 @@ from pydantic import ValidationError
 from app.core.exceptions import ModelGenerationError
 from app.llm.base import LearningModelGateway, ResearchGateway
 from app.models.quiz import Quiz, QuizDraft, QuizGenerateRequest
+from app.knowledge.research import combine_private_and_public, private_research_result
+from app.knowledge.retriever import PrivateEvidenceInsufficient
 
 
 class QuizService:
@@ -14,14 +16,33 @@ class QuizService:
         self,
         gateway: LearningModelGateway,
         researcher: ResearchGateway | None = None,
+        private_retriever=None,
         max_attempts: int = 2,
     ) -> None:
         self.gateway = gateway
         self.researcher = researcher
+        self.private_retriever = private_retriever
         self.max_attempts = max_attempts
 
-    async def generate(self, request: QuizGenerateRequest) -> Quiz:
-        research = await self.researcher.research(request) if self.researcher else None
+    async def generate(self, request: QuizGenerateRequest, user_id: int | None = None) -> Quiz:
+        if request.source_scope in {"private", "mixed"}:
+            if user_id is None or self.private_retriever is None:
+                raise PrivateEvidenceInsufficient("私有资料出题需要登录并选择可用知识库")
+            chunks = await self.private_retriever.retrieve(
+                user_id=user_id,
+                knowledge_base_ids=request.knowledge_base_ids,
+                query=request.user_input,
+            )
+            private = private_research_result(chunks)
+            public = None
+            if request.source_scope == "mixed" and self.researcher:
+                public_request = request.model_copy(
+                    update={"source_scope": "web", "knowledge_base_ids": []}
+                )
+                public = await self.researcher.research(public_request)
+            research = combine_private_and_public(private, public)
+        else:
+            research = await self.researcher.research(request) if self.researcher else None
         grounding_mode = research.grounding_mode if research else "user_content"
         selected_sources = research.sources[:8] if research else []
         sources = [source.to_public() for source in selected_sources]

@@ -1,5 +1,5 @@
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
-import Taro, { useDidShow, useUnload } from '@tarojs/taro'
+import Taro, { useDidShow, useRouter, useUnload } from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 
 import bookbuddy from '@/assets/bookbuddy.svg'
@@ -10,8 +10,8 @@ import BrandBar from '@/components/BrandBar'
 import BottomNav from '@/components/BottomNav'
 import CoachNote from '@/components/CoachNote'
 import { ensureLogin } from '@/services/auth'
-import { ApiError, createQuizTask, getQuizHistory, getQuizTask, getUserProfile } from '@/services/api'
-import type { InputSourceType, QuizHistoryItem, QuizTaskStatus, UserSummary } from '@/types/api'
+import { ApiError, createQuizTask, getKnowledgeBases, getQuizHistory, getQuizTask, getUserProfile } from '@/services/api'
+import type { InputSourceType, KnowledgeBaseSummary, QuizHistoryItem, QuizTaskStatus, SourceScope, UserSummary } from '@/types/api'
 import { authStorage } from '@/utils/auth-storage'
 import { learningStorage } from '@/utils/storage'
 
@@ -63,8 +63,12 @@ function isValidPublicUrl(value: string): boolean {
 }
 
 export default function IndexPage() {
+  const router = useRouter()
   const [input, setInput] = useState('')
   const [sourceType, setSourceType] = useState<InputSourceType>('text')
+  const [sourceScope, setSourceScope] = useState<SourceScope>(() => router.params.scope === 'private' ? 'private' : 'web')
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseSummary[]>([])
+  const [selectedKnowledgeBaseIds, setSelectedKnowledgeBaseIds] = useState<number[]>(() => router.params.kb ? [Number(router.params.kb)] : [])
   const [pageState, setPageState] = useState<PageState>('idle')
   const [loadingStage, setLoadingStage] = useState<LoadingStage>('search')
   const [errorKind, setErrorKind] = useState<ErrorKind>('generic')
@@ -96,16 +100,22 @@ export default function IndexPage() {
 
   useDidShow(() => {
     void ensureLogin().then(async () => {
-      const [profile, history] = await Promise.all([getUserProfile(), getQuizHistory(1, 2)])
+      const [profile, history, bases] = await Promise.all([getUserProfile(), getQuizHistory(1, 2), getKnowledgeBases()])
       setUser(profile)
       setRecentRecords(history.items.filter((item) => item.status === 'completed'))
+      setKnowledgeBases(bases)
+      const readyIds = new Set(bases.filter((item) => item.ready_document_count > 0).map((item) => item.id))
+      setSelectedKnowledgeBaseIds((current) => current.filter((id) => readyIds.has(id)))
       authStorage.saveUser(profile)
     }).catch(() => undefined)
   })
 
   const startGenerate = async () => {
-    const value = input.trim()
-    const valid = sourceType === 'url' ? isValidPublicUrl(value) : value.length >= 4
+    const typedValue = input.trim()
+    const selectedNames = knowledgeBases.filter((item) => selectedKnowledgeBaseIds.includes(item.id)).map((item) => item.name)
+    const value = typedValue || `请根据${selectedNames.join('、')}的核心知识生成题目`
+    const usesPrivate = sourceScope !== 'web'
+    const valid = usesPrivate ? selectedKnowledgeBaseIds.length > 0 : sourceType === 'url' ? isValidPublicUrl(value) : value.length >= 4
     if (!valid || pageState === 'loading') {
       if (sourceType === 'url') Taro.showToast({ title: '请检查网址，需要完整的 HTTP / HTTPS 地址', icon: 'none' })
       return
@@ -155,7 +165,10 @@ export default function IndexPage() {
       }, POLL_INTERVAL_MS)
     }
     try {
-      const task = await createQuizTask(value, 5, sourceType)
+      const task = await createQuizTask(value, 5, sourceType, {
+        scope: sourceScope,
+        knowledgeBaseIds: usesPrivate ? selectedKnowledgeBaseIds : []
+      })
       await processTask(task)
     } catch (error) {
       handleFailure(error)
@@ -171,16 +184,28 @@ export default function IndexPage() {
   const switchSource = (next: InputSourceType) => {
     if (pageState === 'loading') return
     setSourceType(next)
+    if (next === 'url') setSourceScope('web')
     setInput('')
   }
+
+  const switchScope = (scope: SourceScope) => {
+    if (pageState === 'loading') return
+    if (scope !== 'web' && !user) { Taro.showToast({ title: '私有资料出题需要先登录', icon: 'none' }); return }
+    setSourceScope(scope)
+    if (scope !== 'web') setSourceType('text')
+  }
+
+  const toggleKnowledgeBase = (id: number) => setSelectedKnowledgeBaseIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id].slice(0, 5))
 
   const showLater = (source: string) => {
     Taro.showToast({ title: `${source}导入将在后续版本开放`, icon: 'none' })
   }
 
   if (pageState === 'loading') {
-    const stage = loadingCopy[loadingStage]
-    const steps = sourceType === 'url' ? ['检查网址', '提取网页', '核对依据', '生成题目'] : ['理解主题', '搜索资料', '核对依据', '生成题目']
+    const stage = sourceScope !== 'web' && loadingStage === 'search'
+      ? { badge: '检索私有资料', title: '鱼仔正在翻你的资料柜', copy: '只取与这次学习主题相关的片段，不把私有原文交给联网搜索。' }
+      : loadingCopy[loadingStage]
+    const steps = sourceScope === 'private' ? ['检索私有资料', '筛选相关片段', '核对依据', '生成题目'] : sourceScope === 'mixed' ? ['检索私有资料', '按需联网', '核对依据', '生成题目'] : sourceType === 'url' ? ['检查网址', '提取网页', '核对依据', '生成题目'] : ['理解主题', '搜索资料', '核对依据', '生成题目']
     const currentStep = loadingStage === 'search' ? 1 : loadingStage === 'extract' ? 1 : loadingStage === 'verify' ? 2 : 3
     return (
       <View className='screen loading-screen'>
@@ -190,7 +215,7 @@ export default function IndexPage() {
           <View className='loading-title'>{stage.title}</View>
           <View className='subcopy'>{stage.copy}</View>
           <View className='research-route'>{steps.slice(0, 3).map((step, index) => <View key={step} className={`route-stop ${index < currentStep ? 'is-done' : ''} ${index === currentStep ? 'is-current' : ''}`}><Text>{index < currentStep ? '✓' : index === currentStep ? '⌕' : '□'}</Text><Text>{step}</Text></View>)}</View>
-          <View className='research-ticket'><Text className='research-ticket-title'>{sourceType === 'url' ? '正在读取你提供的网页' : `正在查：${input.slice(0, 32)}`}</Text><Text>鱼仔只会使用本次找到并核对过的资料，不会让旧知识抢答。</Text></View>
+          <View className='research-ticket'><Text className='research-ticket-title'>{sourceScope !== 'web' ? `正在检索 ${selectedKnowledgeBaseIds.length} 个知识库` : sourceType === 'url' ? '正在读取你提供的网页' : `正在查：${input.slice(0, 32)}`}</Text><Text>鱼仔只会使用本次找到并核对过的资料，不会让旧知识抢答。</Text></View>
           <View className='loading-list'>
             {steps.map((step, index) => <View key={step} className={`loading-step ${index === currentStep ? 'is-current' : ''}`}><Text className='step-dot'>{index < currentStep ? '✓' : index === currentStep ? '⌕' : index + 1}</Text><Text>{step}</Text></View>)}
           </View>
@@ -227,10 +252,10 @@ export default function IndexPage() {
     )
   }
 
-  const inputValid = sourceType === 'url' ? isValidPublicUrl(input) : input.trim().length >= 4
+  const inputValid = sourceScope !== 'web' ? selectedKnowledgeBaseIds.length > 0 : sourceType === 'url' ? isValidPublicUrl(input) : input.trim().length >= 4
 
   return (
-    <View className='screen'>
+    <View className={`screen ${sourceScope !== 'web' ? 'home-private-screen' : ''}`}>
       <View className='screen-body home-body'>
         <BrandBar trailing={<View className='xp-pill' onClick={() => Taro.navigateTo({ url: '/pages/profile/index' })}><Text className='star'>★</Text><Text>{user?.total_xp ?? 0} XP</Text></View>} />
         <View className='home-user-strip' onClick={() => Taro.navigateTo({ url: '/pages/profile/index' })}><Image src={user?.avatar_url || fishai} mode='aspectFill' /><Text>{user ? `${user.nickname}，和鱼仔继续闯关` : '鱼仔正在识别你的学习档案'}</Text><Text>›</Text></View>
@@ -248,10 +273,21 @@ export default function IndexPage() {
           />
           <Text className='input-counter'>{sourceType === 'url' ? '公开网页' : `${input.length}/2000`}</Text>
         </View>
+        <View className='scope-row'>
+          <Button className={`scope-chip ${sourceScope === 'web' ? 'is-active' : ''}`} onClick={() => switchScope('web')}>🌐 联网</Button>
+          <Button className={`scope-chip ${sourceScope === 'private' ? 'is-active' : ''}`} onClick={() => switchScope('private')}>🗂 私有资料</Button>
+          <Button className={`scope-chip ${sourceScope === 'mixed' ? 'is-active' : ''}`} onClick={() => switchScope('mixed')}>✨ 智能混合</Button>
+        </View>
+        {sourceScope !== 'web' && <View className='home-kb-select'>
+          <View className='inspiration-heading'><Text>选择知识库</Text><Text className='muted' onClick={() => Taro.navigateTo({ url: '/pages/knowledge/index' })}>管理资料 →</Text></View>
+          {knowledgeBases.filter((item) => item.ready_document_count > 0).map((item) => <Button key={item.id} className={`home-kb-option ${selectedKnowledgeBaseIds.includes(item.id) ? 'is-selected' : ''}`} onClick={() => toggleKnowledgeBase(item.id)}><View><Text>{item.name}</Text><Text>{item.ready_document_count} 份资料 · {item.chunk_count} 个片段</Text></View><Text>{selectedKnowledgeBaseIds.includes(item.id) ? '✓' : '○'}</Text></Button>)}
+          {!knowledgeBases.some((item) => item.ready_document_count > 0) && <View className='knowledge-notice'>还没有就绪资料，请先到“我的资料库”上传文档。</View>}
+          <View className='private-flow-note'>🔒 {sourceScope === 'private' ? '只检索你选择的知识库，不访问互联网。' : '私有资料优先；联网时不会发送私有原文或片段。'}</View>
+        </View>}
         <View className='source-row'>
           <Button className={`source-chip ${sourceType === 'text' ? 'is-active' : ''}`} onClick={() => switchSource('text')}>文本</Button>
           <Button className={`source-chip ${sourceType === 'url' ? 'is-active' : ''}`} onClick={() => switchSource('url')}>URL</Button>
-          <Button className='source-chip' onClick={() => showLater('文件')}>文件</Button>
+          <Button className='source-chip' onClick={() => Taro.navigateTo({ url: '/pages/knowledge/index' })}>文件</Button>
           <Button className='source-chip' onClick={() => showLater('视频')}>视频</Button>
         </View>
         {sourceType === 'url' && <View className='url-hint'>↗ 支持公开的 HTTP / HTTPS 网页，不访问登录页或内网页面</View>}

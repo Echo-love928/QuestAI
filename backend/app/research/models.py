@@ -10,9 +10,10 @@ TimeRange = Literal["day", "week", "month", "year"]
 Complexity = Literal["simple", "complex"]
 ExtractDepth = Literal["basic", "advanced"]
 AcquisitionMethod = Literal[
-    "search_snippet", "user_url_extract", "search_result_extract"
+    "search_snippet", "user_url_extract", "search_result_extract", "private_document"
 ]
-GroundingMode = Literal["user_content", "web_search", "url_extract", "mixed"]
+GroundingMode = Literal["user_content", "web_search", "url_extract", "mixed", "private", "hybrid"]
+SourceKind = Literal["web", "private_document"]
 
 
 class SearchToolInput(BaseModel):
@@ -54,6 +55,10 @@ class QuizSource(BaseModel):
     site_name: str
     acquisition_method: AcquisitionMethod
     published_at: datetime | None = None
+    source_type: SourceKind = "web"
+    knowledge_base_id: int | None = None
+    document_id: str | None = None
+    location: str | None = None
 
 
 class EvidenceSource(QuizSource):

@@ -9,7 +9,11 @@ export default defineAppConfig({
     'pages/profile-edit/index',
     'pages/history/index',
     'pages/history-detail/index',
-    'pages/source/index'
+    'pages/source/index',
+    'pages/knowledge/index',
+    'pages/knowledge-create/index',
+    'pages/knowledge-detail/index',
+    'pages/knowledge-upload/index'
   ],
   window: {
     navigationBarTitleText: 'AI闯关学习',

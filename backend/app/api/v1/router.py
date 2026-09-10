@@ -2,11 +2,20 @@ import logging
 from uuid import uuid4
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 
 from app.api.dependencies import optional_user, required_user
 from app.core.rate_limit import RateLimitExceeded
 from app.models.common import ApiResponse, HealthData
+from app.models.knowledge import (
+    DocumentIngestionTask,
+    DocumentUploadAccepted,
+    KnowledgeBaseCreate,
+    KnowledgeBaseDetail,
+    KnowledgeBaseSummary,
+    KnowledgeBaseUpdate,
+    KnowledgeDocument,
+)
 from app.models.quiz import Quiz, QuizGenerateRequest
 from app.models.quiz_task import QuizTaskStatus
 from app.models.report import LearningReport, ReportGenerateRequest
@@ -28,6 +37,25 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _knowledge_service(request: Request):
+    service = getattr(request.app.state, "knowledge_service", None)
+    if service is None:
+        raise HTTPException(status_code=503, detail="知识库服务暂时不可用")
+    return service
+
+
+async def _validate_private_quiz_request(
+    payload: QuizGenerateRequest, request: Request, user: User | None
+) -> None:
+    if payload.source_scope not in {"private", "mixed"}:
+        return
+    if user is None:
+        raise HTTPException(status_code=401, detail="私有资料出题需要先登录")
+    await _knowledge_service(request).validate_selection(user.id, payload.knowledge_base_ids)
+    if getattr(request.app.state, "knowledge_retriever", None) is None:
+        raise HTTPException(status_code=503, detail="私有资料检索服务暂时不可用")
+
+
 @router.get("/health", response_model=ApiResponse[HealthData])
 async def health() -> ApiResponse[HealthData]:
     return ApiResponse(data=HealthData())
@@ -39,6 +67,7 @@ async def generate_quiz(
     request: Request,
     user: Annotated[User | None, Depends(optional_user)],
 ) -> ApiResponse[Quiz]:
+    await _validate_private_quiz_request(payload, request, user)
     client_key = f"user:{user.id}" if user is not None else (
         request.client.host if request.client else "anonymous"
     )
@@ -46,7 +75,8 @@ async def generate_quiz(
     quiz = await QuizService(
         request.app.state.gateway,
         researcher=request.app.state.researcher,
-    ).generate(payload)
+        private_retriever=request.app.state.knowledge_retriever,
+    ).generate(payload, user_id=user.id if user is not None else None)
     repository = request.app.state.learning_repository
     if user is not None and repository is not None:
         try:
@@ -67,6 +97,7 @@ async def create_quiz_task(
     background_tasks: BackgroundTasks,
     user: Annotated[User | None, Depends(optional_user)],
 ) -> ApiResponse[QuizTaskStatus]:
+    await _validate_private_quiz_request(payload, request, user)
     client_key = f"user:{user.id}" if user is not None else (
         request.client.host if request.client else "anonymous"
     )
@@ -78,6 +109,7 @@ async def create_quiz_task(
         request.app.state.gateway,
         repository,
         researcher=request.app.state.researcher,
+        private_retriever=request.app.state.knowledge_retriever,
     )
     task = await service.create(payload, user.id if user is not None else None)
     background_tasks.add_task(
@@ -102,6 +134,7 @@ async def get_quiz_task(
         request.app.state.gateway,
         repository,
         researcher=request.app.state.researcher,
+        private_retriever=request.app.state.knowledge_retriever,
     ).get(task_id, user.id if user is not None else None)
     if task is None:
         raise HTTPException(status_code=404, detail="生成任务不存在")
@@ -222,3 +255,55 @@ async def get_quiz_detail(
     if detail is None:
         raise HTTPException(status_code=404, detail="闯关记录不存在")
     return ApiResponse(data=detail)
+
+
+@router.post("/knowledge-bases", response_model=ApiResponse[KnowledgeBaseSummary])
+async def create_knowledge_base(payload: KnowledgeBaseCreate, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[KnowledgeBaseSummary]:
+    return ApiResponse(data=await _knowledge_service(request).create(user.id, payload))
+
+
+@router.get("/knowledge-bases", response_model=ApiResponse[list[KnowledgeBaseSummary]])
+async def list_knowledge_bases(request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[list[KnowledgeBaseSummary]]:
+    return ApiResponse(data=await _knowledge_service(request).list(user.id))
+
+
+@router.get("/knowledge-bases/{knowledge_base_id}", response_model=ApiResponse[KnowledgeBaseDetail])
+async def get_knowledge_base(knowledge_base_id: int, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[KnowledgeBaseDetail]:
+    return ApiResponse(data=await _knowledge_service(request).detail(user.id, knowledge_base_id))
+
+
+@router.put("/knowledge-bases/{knowledge_base_id}", response_model=ApiResponse[KnowledgeBaseSummary])
+async def update_knowledge_base(knowledge_base_id: int, payload: KnowledgeBaseUpdate, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[KnowledgeBaseSummary]:
+    return ApiResponse(data=await _knowledge_service(request).update(user.id, knowledge_base_id, payload))
+
+
+@router.delete("/knowledge-bases/{knowledge_base_id}", status_code=204)
+async def delete_knowledge_base(knowledge_base_id: int, request: Request, user: Annotated[User, Depends(required_user)]) -> Response:
+    await _knowledge_service(request).delete(user.id, knowledge_base_id)
+    return Response(status_code=204)
+
+
+@router.post("/knowledge-bases/{knowledge_base_id}/documents", response_model=ApiResponse[DocumentUploadAccepted], status_code=202)
+async def upload_knowledge_document(knowledge_base_id: int, request: Request, user: Annotated[User, Depends(required_user)], file: Annotated[UploadFile, File()]) -> ApiResponse[DocumentUploadAccepted]:
+    return ApiResponse(data=await _knowledge_service(request).upload(user.id, knowledge_base_id, file))
+
+
+@router.get("/knowledge-bases/{knowledge_base_id}/documents", response_model=ApiResponse[list[KnowledgeDocument]])
+async def list_knowledge_documents(knowledge_base_id: int, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[list[KnowledgeDocument]]:
+    return ApiResponse(data=await _knowledge_service(request).list_documents(user.id, knowledge_base_id))
+
+
+@router.get("/knowledge-bases/{knowledge_base_id}/documents/{document_id}", response_model=ApiResponse[KnowledgeDocument])
+async def get_knowledge_document(knowledge_base_id: int, document_id: str, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[KnowledgeDocument]:
+    return ApiResponse(data=await _knowledge_service(request).document(user.id, knowledge_base_id, document_id))
+
+
+@router.delete("/knowledge-bases/{knowledge_base_id}/documents/{document_id}", status_code=204)
+async def delete_knowledge_document(knowledge_base_id: int, document_id: str, request: Request, user: Annotated[User, Depends(required_user)]) -> Response:
+    await _knowledge_service(request).delete_document(user.id, knowledge_base_id, document_id)
+    return Response(status_code=204)
+
+
+@router.post("/knowledge-bases/{knowledge_base_id}/documents/{document_id}/reindex", response_model=ApiResponse[DocumentIngestionTask])
+async def reindex_knowledge_document(knowledge_base_id: int, document_id: str, request: Request, user: Annotated[User, Depends(required_user)]) -> ApiResponse[DocumentIngestionTask]:
+    return ApiResponse(data=await _knowledge_service(request).reindex(user.id, knowledge_base_id, document_id))

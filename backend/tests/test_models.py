@@ -13,6 +13,23 @@ def test_quiz_request_rejects_short_input() -> None:
         QuizGenerateRequest(user_input="RAG")
 
 
+def test_old_quiz_request_dump_remains_unchanged() -> None:
+    payload = QuizGenerateRequest(user_input="我想学习 RAG").model_dump(exclude_none=True)
+    assert "source_scope" not in payload
+    assert "knowledge_base_ids" not in payload
+    assert payload["source_type"] == "text"
+
+
+def test_private_scope_requires_knowledge_base_ids() -> None:
+    with pytest.raises(ValidationError, match="知识库"):
+        QuizGenerateRequest(user_input="学习内部制度", source_scope="private")
+
+
+def test_knowledge_base_ids_are_deduplicated() -> None:
+    request = QuizGenerateRequest(user_input="学习内部制度", source_scope="mixed", knowledge_base_ids=[2, 2, 3])
+    assert request.knowledge_base_ids == [2, 3]
+
+
 def test_question_rejects_answer_not_present_in_options() -> None:
     with pytest.raises(ValidationError):
         Question(

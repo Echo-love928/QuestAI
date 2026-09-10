@@ -67,6 +67,7 @@ export default function ProfilePage() {
           <View className='profile-stat'><Text>{profile.correct_count}</Text><Text>累计答对</Text></View>
           <View className='profile-stat'><Text>{profile.average_accuracy}%</Text><Text>平均正确率</Text></View>
         </View>
+        <Button className='profile-knowledge-entry' onClick={() => Taro.navigateTo({ url: '/pages/knowledge/index' })}><Text className='profile-record-icon'>🗂</Text><View><Text>我的资料库</Text><Text>上传私有文档，让鱼仔按你的资料出题</Text></View><Text>›</Text></Button>
         <View className='profile-section-title'><Text>最近闯关</Text><Button onClick={() => Taro.navigateTo({ url: '/pages/history/index' })}>查看全部 →</Button></View>
         {records.length ? records.map((record, index) => (
           <Button className='profile-record' key={record.quiz_id} onClick={() => Taro.navigateTo({ url: `/pages/history-detail/index?quizId=${encodeURIComponent(record.quiz_id)}` })}>

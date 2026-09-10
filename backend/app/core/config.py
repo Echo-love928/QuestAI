@@ -37,6 +37,25 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default="", repr=False)
     jwt_expires_hours: int = 168
     upload_base_url: str = "http://127.0.0.1:8000"
+    dashscope_api_key: str = Field(default="", repr=False)
+    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    embedding_model: str = "text-embedding-v4"
+    embedding_dimensions: int = Field(default=1024, ge=64, le=2048)
+    embedding_batch_size: int = Field(default=10, ge=1, le=10)
+    knowledge_upload_dir: Path = BACKEND_DIR / "uploads" / "knowledge"
+    chroma_persist_dir: Path = BACKEND_DIR / "data" / "chroma"
+    knowledge_base_limit: int = Field(default=5, ge=1, le=50)
+    knowledge_document_limit: int = Field(default=20, ge=1, le=200)
+    knowledge_file_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
+    knowledge_max_chars: int = Field(default=2_000_000, ge=10_000)
+    knowledge_max_chunks: int = Field(default=5000, ge=10)
+    knowledge_chunk_size: int = Field(default=800, ge=100, le=4000)
+    knowledge_chunk_overlap: int = Field(default=120, ge=0, le=1000)
+    knowledge_retrieval_top_k: int = Field(default=8, ge=1, le=50)
+    knowledge_retrieval_min_score: float = Field(default=0.25, ge=0, le=1)
+    knowledge_max_chunks_per_document: int = Field(default=4, ge=1, le=20)
+    knowledge_retrieval_min_total_chars: int = Field(default=80, ge=1, le=10000)
+    tika_server_endpoint: str = ""
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",
@@ -51,6 +70,11 @@ class Settings(BaseSettings):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
+    @field_validator("knowledge_upload_dir", "chroma_persist_dir", mode="after")
+    @classmethod
+    def resolve_backend_path(cls, value: Path) -> Path:
+        return value if value.is_absolute() else BACKEND_DIR / value
+
     @model_validator(mode="after")
     def validate_research_settings(self) -> "Settings":
         if self.web_research_enabled and not self.tavily_api_key:
@@ -59,6 +83,8 @@ class Settings(BaseSettings):
             raise ValueError("研究工具超时必须小于研究总超时")
         if self.research_max_search_calls > self.research_max_tool_calls:
             raise ValueError("搜索调用上限不能超过工具调用总上限")
+        if self.knowledge_chunk_overlap >= self.knowledge_chunk_size:
+            raise ValueError("知识库分块重叠必须小于分块大小")
         return self
 
 

@@ -13,6 +13,10 @@ htmlcov/
 *.egg-info/
 backend/uploads/avatars/*
 !backend/uploads/avatars/.gitkeep
+backend/uploads/knowledge/*
+!backend/uploads/knowledge/.gitkeep
+backend/data/chroma/*
+!backend/data/chroma/.gitkeep
 
 # Node / Taro
 node_modules/

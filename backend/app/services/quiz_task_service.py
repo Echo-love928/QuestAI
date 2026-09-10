@@ -37,9 +37,12 @@ class QuizTaskService:
         gateway: LearningModelGateway,
         repository,
         researcher: ResearchGateway | None = None,
+        private_retriever=None,
     ) -> None:
         self.repository = repository
-        self.quiz_service = QuizService(gateway, researcher=researcher)
+        self.quiz_service = QuizService(
+            gateway, researcher=researcher, private_retriever=private_retriever
+        )
 
     async def create(
         self, request: QuizGenerateRequest, user_id: int | None
@@ -66,7 +69,7 @@ class QuizTaskService:
     ) -> None:
         await self.repository.mark_quiz_task_processing(task_id)
         try:
-            quiz = await self.quiz_service.generate(request)
+            quiz = await self.quiz_service.generate(request, user_id=user_id)
             if user_id is not None:
                 await self.repository.save_quiz(user_id, quiz)
             await self.repository.complete_quiz_task(task_id, quiz)

@@ -1,8 +1,9 @@
 export type QuestionType = 'single' | 'multiple' | 'judge'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 export type InputSourceType = 'text' | 'url'
-export type GroundingMode = 'user_content' | 'web_search' | 'url_extract' | 'mixed'
-export type AcquisitionMethod = 'search_snippet' | 'user_url_extract' | 'search_result_extract'
+export type SourceScope = 'web' | 'private' | 'mixed'
+export type GroundingMode = 'user_content' | 'web_search' | 'url_extract' | 'mixed' | 'private' | 'hybrid'
+export type AcquisitionMethod = 'search_snippet' | 'user_url_extract' | 'search_result_extract' | 'private_document'
 
 export interface GroundingSource {
   source_id: string
@@ -11,6 +12,10 @@ export interface GroundingSource {
   site_name: string
   acquisition_method: AcquisitionMethod
   published_at?: string | null
+  source_type?: 'web' | 'private_document'
+  knowledge_base_id?: number | null
+  document_id?: string | null
+  location?: string | null
 }
 
 export interface Option {
@@ -122,4 +127,49 @@ export interface QuizHistoryDetail {
   quiz: Record<string, unknown>
   answer_records: Array<Record<string, unknown>>
   report: Record<string, unknown> | null
+}
+
+export type KnowledgeDocumentStatus = 'uploaded' | 'parsing' | 'chunking' | 'embedding' | 'ready' | 'failed' | 'deleting'
+
+export interface KnowledgeDocument {
+  document_id: string
+  knowledge_base_id: number
+  filename: string
+  content_type: string
+  size_bytes: number
+  status: KnowledgeDocumentStatus
+  error_code?: string | null
+  error_message?: string | null
+  chunk_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface KnowledgeBaseSummary {
+  id: number
+  name: string
+  description?: string | null
+  document_count: number
+  ready_document_count: number
+  chunk_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface KnowledgeBaseDetail extends KnowledgeBaseSummary {
+  documents: KnowledgeDocument[]
+}
+
+export interface DocumentIngestionTask {
+  task_id: string
+  document_id: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  stage: 'uploaded' | 'parsing' | 'chunking' | 'embedding' | 'ready' | 'failed'
+  error_code?: string | null
+  error_message?: string | null
+}
+
+export interface DocumentUploadAccepted {
+  document: KnowledgeDocument
+  task: DocumentIngestionTask
 }

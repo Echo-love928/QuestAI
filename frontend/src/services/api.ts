@@ -4,13 +4,18 @@ import type {
   AnswerRecord,
   ApiResponse,
   InputSourceType,
+  SourceScope,
   LearningReport,
   Question,
   Quiz,
   QuizTaskStatus,
   QuizHistoryDetail,
   QuizHistoryPage,
-  UserProfile
+  UserProfile,
+  KnowledgeBaseSummary,
+  KnowledgeBaseDetail,
+  KnowledgeDocument,
+  DocumentUploadAccepted
 } from '@/types/api'
 import { ensureLogin } from '@/services/auth'
 import { authStorage } from '@/utils/auth-storage'
@@ -22,6 +27,7 @@ interface RequestOptions {
   retryAuth?: boolean
   suppressAuth?: boolean
   onTask?: (task: ReturnType<typeof Taro.request>) => void
+  allowEmpty?: boolean
 }
 
 export class ApiError extends Error {
@@ -68,8 +74,11 @@ async function request<T>(
         throw loginError
       }
     }
+    if (response.statusCode >= 200 && response.statusCode < 300 && behavior.allowEmpty) {
+      return undefined as T
+    }
     if (response.statusCode < 200 || response.statusCode >= 300 || body.code !== 0 || !body.data) {
-      throw new ApiError(body.code, body.message || '请求失败，请稍后重试', response.statusCode)
+      throw new ApiError(body?.code ?? 5000, body?.message || '请求失败，请稍后重试', response.statusCode)
     }
     return body.data
   } catch (error) {
@@ -117,7 +126,8 @@ export function generateQuiz(userInput: string, questionCount = 5, sourceType: I
 export function createQuizTask(
   userInput: string,
   questionCount = 5,
-  sourceType: InputSourceType = 'text'
+  sourceType: InputSourceType = 'text',
+  source?: { scope: SourceScope; knowledgeBaseIds?: number[] }
 ): Promise<QuizTaskStatus> {
   return request<QuizTaskStatus>(
     {
@@ -127,7 +137,11 @@ export function createQuizTask(
         user_input: userInput,
         source_type: sourceType,
         question_count: questionCount,
-        difficulty: 'mixed'
+        difficulty: 'mixed',
+        ...(source ? {
+          source_scope: source.scope,
+          knowledge_base_ids: source.knowledgeBaseIds || []
+        } : {})
       }
     },
     { allowAnonymous: true }
@@ -212,4 +226,63 @@ async function uploadAvatarAttempt(filePath: string, retryAuth: boolean): Promis
 
 export function uploadAvatar(filePath: string): Promise<UserProfile> {
   return uploadAvatarAttempt(filePath, true)
+}
+
+export function getKnowledgeBases(): Promise<KnowledgeBaseSummary[]> {
+  return request<KnowledgeBaseSummary[]>({ url: `${API_BASE}/knowledge-bases`, method: 'GET' })
+}
+
+export function createKnowledgeBase(payload: { name: string; description?: string }): Promise<KnowledgeBaseSummary> {
+  return request<KnowledgeBaseSummary>({ url: `${API_BASE}/knowledge-bases`, method: 'POST', data: payload })
+}
+
+export function getKnowledgeBase(id: number): Promise<KnowledgeBaseDetail> {
+  return request<KnowledgeBaseDetail>({ url: `${API_BASE}/knowledge-bases/${id}`, method: 'GET' })
+}
+
+export function getKnowledgeDocuments(id: number): Promise<KnowledgeDocument[]> {
+  return request<KnowledgeDocument[]>({ url: `${API_BASE}/knowledge-bases/${id}/documents`, method: 'GET' })
+}
+
+export function deleteKnowledgeBase(id: number): Promise<void> {
+  return request<void>({ url: `${API_BASE}/knowledge-bases/${id}`, method: 'DELETE' }, { allowEmpty: true })
+}
+
+export function deleteKnowledgeDocument(knowledgeBaseId: number, documentId: string): Promise<void> {
+  return request<void>({ url: `${API_BASE}/knowledge-bases/${knowledgeBaseId}/documents/${encodeURIComponent(documentId)}`, method: 'DELETE' }, { allowEmpty: true })
+}
+
+export function reindexKnowledgeDocument(knowledgeBaseId: number, documentId: string) {
+  return request<DocumentUploadAccepted['task']>({ url: `${API_BASE}/knowledge-bases/${knowledgeBaseId}/documents/${encodeURIComponent(documentId)}/reindex`, method: 'POST' })
+}
+
+async function uploadKnowledgeDocumentAttempt(
+  knowledgeBaseId: number,
+  filePath: string,
+  retryAuth: boolean,
+  onProgress?: (progress: number) => void
+): Promise<DocumentUploadAccepted> {
+  if (!authStorage.getToken()) await ensureLogin()
+  const token = authStorage.getToken()
+  const task = Taro.uploadFile({
+    url: `${API_BASE}/knowledge-bases/${knowledgeBaseId}/documents`,
+    filePath,
+    name: 'file',
+    header: token ? { Authorization: `Bearer ${token}` } : {}
+  })
+  task.progress((event) => onProgress?.(event.progress))
+  const response = await task
+  const body = JSON.parse(response.data) as ApiResponse<DocumentUploadAccepted>
+  if (response.statusCode === 401 && retryAuth) {
+    await ensureLogin(true)
+    return uploadKnowledgeDocumentAttempt(knowledgeBaseId, filePath, false, onProgress)
+  }
+  if (response.statusCode < 200 || response.statusCode >= 300 || !body.data) {
+    throw new ApiError(body.code, body.message || '资料上传失败', response.statusCode)
+  }
+  return body.data
+}
+
+export function uploadKnowledgeDocument(knowledgeBaseId: number, filePath: string, onProgress?: (progress: number) => void) {
+  return uploadKnowledgeDocumentAttempt(knowledgeBaseId, filePath, true, onProgress)
 }

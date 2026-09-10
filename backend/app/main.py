@@ -23,6 +23,7 @@ from app.core.exceptions import (
 from app.core.security import TokenManager
 from app.core.rate_limit import RateLimitExceeded, SlidingWindowRateLimiter
 from app.db.database import Database
+from app.db.knowledge_repository import KnowledgeQuotaExceeded, KnowledgeRepository
 from app.db.repositories import MySQLRepository
 from app.integrations.wechat import WechatGateway
 from app.llm.base import LearningModelGateway, ResearchGateway
@@ -30,6 +31,14 @@ from app.llm.deepseek_gateway import DeepSeekGateway
 from app.research.agent import ResearchAgent
 from app.research.safety import UnsafeUrlError
 from app.services.user_service import UserService
+from app.services.knowledge_service import KnowledgeNotFound, KnowledgeService
+from app.knowledge.chunking import DocumentChunker
+from app.knowledge.embeddings import BailianEmbeddingGateway
+from app.knowledge.files import KnowledgeFileStore
+from app.knowledge.ingestion import IngestionService
+from app.knowledge.parsers import DocumentParser, LegacyDocParser
+from app.knowledge.vector_store import ChromaKnowledgeStore
+from app.knowledge.retriever import KnowledgeRetriever
 
 
 def error_payload(code: int, message: str) -> dict:
@@ -43,6 +52,8 @@ def create_app(
     learning_repository: MySQLRepository | None = None,
     upload_dir: Path | None = None,
     upload_base_url: str | None = None,
+    knowledge_service: KnowledgeService | None = None,
+    knowledge_retriever: KnowledgeRetriever | None = None,
 ) -> FastAPI:
     settings = get_settings()
     database: Database | None = None
@@ -65,6 +76,51 @@ def create_app(
                         expires_delta=timedelta(hours=settings.jwt_expires_hours),
                     ),
                 )
+            if app.state.knowledge_service is None and settings.dashscope_api_key:
+                knowledge_repository = KnowledgeRepository(database)
+                file_store = KnowledgeFileStore(settings.knowledge_upload_dir, max_bytes=settings.knowledge_file_max_bytes)
+                vector_store = ChromaKnowledgeStore(settings.chroma_persist_dir)
+                embedding = BailianEmbeddingGateway(
+                    api_key=settings.dashscope_api_key,
+                    base_url=settings.dashscope_base_url,
+                    model=settings.embedding_model,
+                    dimensions=settings.embedding_dimensions,
+                    batch_size=settings.embedding_batch_size,
+                )
+                ingestion = IngestionService(
+                    repository=knowledge_repository,
+                    files=file_store,
+                    parser=DocumentParser(
+                        max_chars=settings.knowledge_max_chars,
+                        legacy_parser=LegacyDocParser(settings.tika_server_endpoint),
+                    ),
+                    chunker=DocumentChunker(
+                        chunk_size=settings.knowledge_chunk_size,
+                        chunk_overlap=settings.knowledge_chunk_overlap,
+                        max_chunks=settings.knowledge_max_chunks,
+                    ),
+                    embedding=embedding,
+                    store=vector_store,
+                    embedding_model=settings.embedding_model,
+                    embedding_dimensions=settings.embedding_dimensions,
+                )
+                app.state.knowledge_service = KnowledgeService(
+                    repository=knowledge_repository,
+                    file_store=file_store,
+                    vector_store=vector_store,
+                    ingestion=ingestion,
+                    knowledge_base_limit=settings.knowledge_base_limit,
+                    document_limit=settings.knowledge_document_limit,
+                )
+                app.state.knowledge_retriever = KnowledgeRetriever(
+                    embedding,
+                    vector_store,
+                    top_k=settings.knowledge_retrieval_top_k,
+                    min_score=settings.knowledge_retrieval_min_score,
+                    max_per_document=settings.knowledge_max_chunks_per_document,
+                    min_total_chars=settings.knowledge_retrieval_min_total_chars,
+                )
+                await ingestion.recover()
         try:
             yield
         finally:
@@ -84,6 +140,8 @@ def create_app(
     )
     app.state.user_service = user_service
     app.state.learning_repository = learning_repository
+    app.state.knowledge_service = knowledge_service
+    app.state.knowledge_retriever = knowledge_retriever
     avatar_dir = upload_dir or (Path(__file__).resolve().parents[1] / "uploads" / "avatars")
     avatar_dir.mkdir(parents=True, exist_ok=True)
     app.state.avatar_dir = avatar_dir
@@ -101,7 +159,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
     )
     app.include_router(router, prefix=settings.api_prefix)
@@ -123,6 +181,14 @@ def create_app(
             status_code=503,
             content=error_payload(5001, "AI 生成失败，请稍后重试"),
         )
+
+    @app.exception_handler(KnowledgeNotFound)
+    async def knowledge_not_found(_: Request, exc: KnowledgeNotFound) -> JSONResponse:
+        return JSONResponse(status_code=404, content=error_payload(4404, str(exc)))
+
+    @app.exception_handler(KnowledgeQuotaExceeded)
+    async def knowledge_quota_exceeded(_: Request, exc: KnowledgeQuotaExceeded) -> JSONResponse:
+        return JSONResponse(status_code=409, content=error_payload(4409, str(exc)))
 
     async def research_error_response(
         status_code: int, code: int, message: str

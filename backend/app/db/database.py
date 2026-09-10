@@ -36,7 +36,20 @@ class Database:
 
     async def fetch_one(self, sql: str, args: tuple[Any, ...] = ()) -> dict | None:
         async with self.require_pool().acquire() as connection:
-            async with connection.cursor(aiomysql.DictCursor) as cursor:
-                await cursor.execute(sql, args)
-                return await cursor.fetchone()
+            await connection.rollback()
+            try:
+                async with connection.cursor(aiomysql.DictCursor) as cursor:
+                    await cursor.execute(sql, args)
+                    return await cursor.fetchone()
+            finally:
+                await connection.rollback()
 
+    async def fetch_all(self, sql: str, args: tuple[Any, ...] = ()) -> list[dict]:
+        async with self.require_pool().acquire() as connection:
+            await connection.rollback()
+            try:
+                async with connection.cursor(aiomysql.DictCursor) as cursor:
+                    await cursor.execute(sql, args)
+                    return list(await cursor.fetchall())
+            finally:
+                await connection.rollback()

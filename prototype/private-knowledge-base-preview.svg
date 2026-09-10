@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1030" viewBox="0 0 1440 1030">
+  <defs>
+    <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#d5b62e"/></pattern>
+    <filter id="hard" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="8" dy="9" stdDeviation="0" flood-color="#202228" flood-opacity=".78"/></filter>
+    <style>
+      text{font-family:'Microsoft YaHei','PingFang SC',sans-serif;fill:#202228}.title{font-size:40px;font-weight:900}.lead{font-size:18px;font-weight:700;fill:#65551f}.n{font:900 32px Impact,sans-serif;fill:#f36b2d}.ct{font-size:21px;font-weight:900}.nav{font-size:14px;font-weight:900}.h{font-size:27px;font-weight:900}.sub{font-size:12px;font-weight:700;fill:#746d5f}.b{font-size:16px;font-weight:900}.s{font-size:11px;font-weight:700;fill:#746d5f}.btn{font-size:14px;font-weight:900}.tag{font-size:10px;font-weight:900}
+    </style>
+  </defs>
+  <rect width="1440" height="1030" fill="#ffd93d"/><rect width="1440" height="1030" fill="url(#dots)" opacity=".75"/>
+  <text x="55" y="65" class="title">鱼仔的私有资料柜</text><text x="55" y="95" class="lead">AI闯关学习 · 私有知识库关键页面预览</text>
+
+  <g transform="translate(54 132)"><text x="0" y="25" class="n">02</text><text x="55" y="24" class="ct">知识库列表</text><text x="55" y="45" class="s">管理多个资料主题</text>
+    <g transform="translate(0 67)" filter="url(#hard)"><rect width="405" height="760" rx="38" fill="#fff8d8" stroke="#202228" stroke-width="4"/><rect x="146" width="113" height="29" rx="0 0 18 18" fill="#202228"/><line x1="0" y1="77" x2="405" y2="77" stroke="#202228" stroke-opacity=".12" stroke-width="2"/><text x="20" y="52" font-size="25">‹</text><text x="153" y="52" class="nav">我的资料库</text><rect x="320" y="29" width="66" height="29" rx="16" fill="#fff" stroke="#bbb49d"/><text x="332" y="49" class="nav">••  ◉</text>
+      <text x="23" y="125" class="h">资料分柜放，</text><text x="23" y="160" class="h">找起来不迷路。</text><text x="23" y="185" class="sub">2 / 5 个知识库</text><rect x="292" y="113" width="89" height="40" rx="13" fill="#ff8c42" stroke="#202228" stroke-width="3"/><text x="308" y="139" class="btn">＋ 新建</text>
+      <g transform="translate(22 220)"><rect y="-11" width="102" height="17" rx="7" fill="#ffd93d" stroke="#202228" stroke-width="3"/><rect width="360" height="145" rx="8 19 19 19" fill="#fffdf4" stroke="#202228" stroke-width="3"/><rect x="16" y="20" width="77" height="22" rx="11" fill="#dff7e9" stroke="#202228" stroke-width="2"/><text x="27" y="35" class="tag" fill="#176e4c">● 可用于出题</text><text x="16" y="70" class="b">客服新人训练营</text><text x="16" y="94" class="s">4 份文档 · 326 个知识片段</text><text x="16" y="125" class="s">更新于 10 分钟前</text><text x="333" y="126" font-size="25">›</text></g>
+      <g transform="translate(22 400)"><rect y="-11" width="102" height="17" rx="7" fill="#ff8c42" stroke="#202228" stroke-width="3"/><rect width="360" height="137" rx="8 19 19 19" fill="#fffdf4" stroke="#202228" stroke-width="3"/><rect x="16" y="20" width="76" height="22" rx="11" fill="#ffe4c9" stroke="#202228" stroke-width="2"/><text x="27" y="35" class="tag">⟳ 正在索引</text><text x="16" y="70" class="b">产品发布手册</text><text x="16" y="94" class="s">2 份文档 · 1 份处理中</text><rect x="16" y="111" width="326" height="9" rx="5" fill="#fff" stroke="#202228" stroke-width="2"/><rect x="17" y="112" width="220" height="7" rx="4" fill="#ff8c42"/></g>
+      <rect x="22" y="575" width="360" height="53" rx="15" fill="#ff8c42" stroke="#202228" stroke-width="3"/><text x="105" y="608" class="btn">用资料库生成闯关 →</text>
+      <rect x="12" y="680" width="381" height="61" rx="19" fill="#fff" stroke="#202228" stroke-width="2"/><text x="56" y="708" font-size="19">✦</text><text x="190" y="708" font-size="19">▤</text><text x="325" y="708" font-size="19" fill="#f36b2d">●</text><text x="49" y="727" class="tag">闯关</text><text x="183" y="727" class="tag">题库</text><text x="317" y="727" class="tag" fill="#f36b2d">我的</text>
+    </g>
+  </g>
+
+  <g transform="translate(518 132)"><text x="0" y="25" class="n">05</text><text x="55" y="24" class="ct">上传与校验</text><text x="55" y="45" class="s">限制清晰，隐私可感知</text>
+    <g transform="translate(0 67)" filter="url(#hard)"><rect width="405" height="760" rx="38" fill="#fff8d8" stroke="#202228" stroke-width="4"/><rect x="146" width="113" height="29" rx="0 0 18 18" fill="#202228"/><line x1="0" y1="77" x2="405" y2="77" stroke="#202228" stroke-opacity=".12" stroke-width="2"/><text x="20" y="52" font-size="25">‹</text><text x="166" y="52" class="nav">上传资料</text><rect x="320" y="29" width="66" height="29" rx="16" fill="#fff" stroke="#bbb49d"/><text x="332" y="49" class="nav">••  ◉</text>
+      <text x="23" y="128" class="h">把资料交给鱼仔，</text><text x="23" y="164" class="h">它会一页页读。</text><text x="23" y="190" class="sub">本次上传到“客服新人训练营”</text>
+      <rect x="23" y="220" width="359" height="166" rx="19" fill="#fff" stroke="#202228" stroke-width="3" stroke-dasharray="9 7"/><text x="179" y="278" font-size="38">📎</text><text x="145" y="320" class="b">选择聊天文件</text><text x="120" y="348" class="sub">PDF、DOC、DOCX、Markdown</text>
+      <g transform="translate(26 418)"><text y="0" class="s">✓　单个文件不超过 10MB</text><text y="34" class="s">✓　支持文本 PDF，不支持扫描件 OCR</text><text y="68" class="s">✓　不支持加密或设有密码的文件</text><text y="102" class="s">✓　上传后调用百炼生成向量</text></g>
+      <rect x="23" y="552" width="359" height="69" rx="12" fill="#e6f2ff" stroke="#202228" stroke-width="2"/><text x="38" y="579" font-size="20">🔒</text><text x="70" y="577" class="b" font-size="13">私有资料不会发送给联网搜索</text><text x="70" y="601" class="s">仅检索片段会交给 DeepSeek 出题</text>
+      <rect x="23" y="650" width="359" height="55" rx="15" fill="#ff8c42" stroke="#202228" stroke-width="3"/><text x="117" y="685" class="btn">选择并开始上传 →</text>
+    </g>
+  </g>
+
+  <g transform="translate(982 132)"><text x="0" y="25" class="n">09</text><text x="55" y="24" class="ct">Agent 多源检索</text><text x="55" y="45" class="s">私有优先，按需联网</text>
+    <g transform="translate(0 67)" filter="url(#hard)"><rect width="405" height="760" rx="38" fill="#fff8d8" stroke="#202228" stroke-width="4"/><rect x="146" width="113" height="29" rx="0 0 18 18" fill="#202228"/><line x1="0" y1="77" x2="405" y2="77" stroke="#202228" stroke-opacity=".12" stroke-width="2"/><text x="20" y="52" font-size="25">‹</text><text x="166" y="52" class="nav">准备题目</text><rect x="320" y="29" width="66" height="29" rx="16" fill="#fff" stroke="#bbb49d"/><text x="332" y="49" class="nav">••  ◉</text>
+      <text x="23" y="128" class="h">鱼仔正在核对资料，</text><text x="23" y="164" class="h">不靠猜。</text><text x="23" y="190" class="sub">智能混合模式 · 任务 #QUIZ-2041</text>
+      <g transform="translate(25 225)"><rect width="44" height="44" rx="12" fill="#ffd93d" stroke="#202228" stroke-width="2"/><text x="10" y="30" font-size="22">🗂</text><rect x="58" width="295" height="76" rx="5 14 14 14" fill="#dff7e9" stroke="#202228" stroke-width="2"/><text x="73" y="27" class="b" font-size="13">私有资料检索完成</text><text x="73" y="51" class="s">从 4 份文档找到 8 个相关片段。</text></g>
+      <g transform="translate(25 325)"><rect width="44" height="44" rx="12" fill="#ffd93d" stroke="#202228" stroke-width="2"/><text x="10" y="30" font-size="22">🧭</text><rect x="58" width="295" height="85" rx="5 14 14 14" fill="#dff7e9" stroke="#202228" stroke-width="2"/><text x="73" y="27" class="b" font-size="13">需要补充公开背景</text><text x="73" y="51" class="s">只使用主题关键词联网，</text><text x="73" y="69" class="s">不发送私有原文。</text></g>
+      <g transform="translate(25 435)"><rect width="44" height="44" rx="12" fill="#ffd93d" stroke="#202228" stroke-width="2"/><text x="11" y="30" font-size="22">✦</text><rect x="58" width="295" height="68" rx="5 14 14 14" fill="#fff" stroke="#202228" stroke-width="2"/><text x="73" y="27" class="b" font-size="13">正在生成 5 道题</text><text x="73" y="51" class="s">●　●　●</text></g>
+      <g transform="translate(25 530)" opacity=".5"><rect width="44" height="44" rx="12" fill="#fff" stroke="#202228" stroke-width="2"/><text x="12" y="30" font-size="22">✓</text><rect x="58" width="295" height="57" rx="5 14 14 14" fill="#fff" stroke="#202228" stroke-width="2"/><text x="73" y="35" class="b" font-size="13">质量检查与保存</text></g>
+      <rect x="23" y="625" width="359" height="53" fill="#fff4cf"/><rect x="23" y="625" width="5" height="53" fill="#ff8c42"/><text x="40" y="657" class="s">预计还需约 8 秒，离开页面也不会中断。</text>
+      <rect x="23" y="694" width="359" height="43" rx="13" fill="#fff" stroke="#202228" stroke-width="3"/><text x="142" y="721" class="btn">查看完成状态</text>
+    </g>
+  </g>
+  <g transform="translate(55 972)"><rect width="1330" height="38" rx="19" fill="#202228"/><text x="28" y="25" font-size="13" font-weight="700" fill="#fff">完整 HTML 另含：个人中心入口、新建知识库、详情页、解析进度、失败重试、来源选择、生成结果、答题引用、删除确认与空状态（共 12 屏）</text></g>
+</svg>

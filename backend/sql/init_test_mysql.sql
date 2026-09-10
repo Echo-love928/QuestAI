@@ -15,3 +15,9 @@ CREATE TABLE IF NOT EXISTS `AI-learn-test`.`reports`
   LIKE `AI-learn`.`reports`;
 CREATE TABLE IF NOT EXISTS `AI-learn-test`.`quiz_generation_tasks`
   LIKE `AI-learn`.`quiz_generation_tasks`;
+CREATE TABLE IF NOT EXISTS `AI-learn-test`.`knowledge_bases`
+  LIKE `AI-learn`.`knowledge_bases`;
+CREATE TABLE IF NOT EXISTS `AI-learn-test`.`knowledge_documents`
+  LIKE `AI-learn`.`knowledge_documents`;
+CREATE TABLE IF NOT EXISTS `AI-learn-test`.`document_ingestion_tasks`
+  LIKE `AI-learn`.`document_ingestion_tasks`;

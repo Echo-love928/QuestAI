@@ -130,6 +130,34 @@ def make_grounded_quiz() -> Quiz:
     )
 
 
+def make_private_quiz() -> Quiz:
+    source = QuizSource(
+        source_id="private_doc_safe_0",
+        title="内部规范.pdf",
+        url="",
+        site_name="私有知识库",
+        acquisition_method="private_document",
+        source_type="private_document",
+        knowledge_base_id=3,
+        document_id="doc_safe",
+        location="第 12 页",
+    )
+    questions = [
+        question.model_copy(update={"source_ids": [source.source_id]})
+        for question in make_questions()
+    ]
+    return Quiz(
+        quiz_id="quiz_mysql_private",
+        title="内部规范闯关",
+        summary="基于私有资料",
+        source_type="text",
+        grounding_mode="private",
+        sources=[source],
+        user_input="学习内部制度",
+        questions=questions,
+    )
+
+
 @pytest.mark.anyio
 async def test_mysql_login_profile_and_history_persistence(mysql_repository) -> None:
     repository = mysql_repository
@@ -191,3 +219,22 @@ async def test_grounding_source_snapshot_round_trip_without_page_content(
     assert detail.quiz["sources"][0]["source_id"] == "src_official"
     assert "content" not in detail.quiz["sources"][0]
     assert detail.quiz["questions"][0]["source_ids"] == ["src_official"]
+
+
+@pytest.mark.anyio
+async def test_private_source_snapshot_survives_without_original_document(
+    mysql_repository,
+) -> None:
+    repository = mysql_repository
+    user = await repository.upsert_by_openid("private-history-user")
+    quiz = make_private_quiz()
+
+    await repository.save_quiz(user.id, quiz)
+    detail = await repository.get_quiz_detail(user.id, quiz.quiz_id)
+
+    assert detail is not None
+    source = detail.quiz["sources"][0]
+    assert source["source_type"] == "private_document"
+    assert source["document_id"] == "doc_safe"
+    assert source["location"] == "第 12 页"
+    assert "content" not in source and "storage_key" not in source
